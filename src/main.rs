@@ -69,7 +69,13 @@ fn print_board(board: [[char;9]; 9]) {
     for row in board {
         println!("-------------------------------------");
         for space in row {
-            print!("| {} ", space);
+            let rep: char = match space{
+                ' '=>' ',
+                'X'=>'❌',
+                'O'=>'〇',
+                _=>'😱', //this symbol is bad
+            };
+            print!("| {} ", rep);
         }
         println!("|");
     }
