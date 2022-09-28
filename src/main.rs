@@ -1,8 +1,11 @@
-use std::{fs, num, time};
+use std::{fs, time};
 use std::thread::sleep;
 
 
 fn main() {
+
+
+    //Board is stored as a 1d array in order of 0th small board taking space 0-8, the 1st taking 9-15 etc.
     let mut board = initialize();
     //print_board(board);
 }
@@ -51,9 +54,13 @@ fn place_move(move_string: String, board: &mut [char;81]) { //TODO use regex to 
         }
     }
     println!("Move:{} ({}, {})", team, big_board, small_board);
-    board[((big_board*9) + small_board) as usize] = team;
+    board[get_index(big_board, small_board)] = team;
     print_board(*board);
 
+}
+
+fn get_index(big_board: u8, small_board: u8) -> usize{
+    ((big_board*9) + small_board) as usize
 }
 
 fn file_to_string(name: &str, wait_for_file: bool) -> String {
@@ -74,7 +81,6 @@ fn file_to_string(name: &str, wait_for_file: bool) -> String {
 }
 
 fn print_board(board: [char;81]){
-
     println!("-------------------------------------");
     for row in 0..3 {
         for subrow in 0..3 {
@@ -93,5 +99,4 @@ fn print_board(board: [char;81]){
             println!();
         }println!("-------------------------------------");
     }
-
 }

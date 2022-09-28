@@ -1,4 +1,5 @@
 #!/bin/bash
+clear
 cargo build
 cd target/debug
 rm first_four_moves
