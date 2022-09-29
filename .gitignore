@@ -1,3 +1,7 @@
 /Cargo.lock
 .idea
-/target/debug/UltimateTicTacToeAI*
+/target
+/end_game
+/first_four_moves
+/move_file
+/Temp.go

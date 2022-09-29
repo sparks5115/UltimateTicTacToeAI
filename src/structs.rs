@@ -1,5 +1,6 @@
 use helpers::file_to_string;
 use crate::{helpers};
+use super::TEAM_NAME;
 
 pub struct Moove {
     pub team: String,
@@ -9,12 +10,12 @@ pub struct Moove {
 impl Moove {
     pub(crate) fn parse_from_string(move_string: String) -> Moove {
 
-        let v: Vec<&str> = move_string.split(' ').collect();
+        let v: Vec<&str> = move_string.trim().split(' ').collect(); //this only works if it is formatted correctly
 
         return Moove {
             team: v[0].parse().unwrap(),
-            big_board: v[1].chars().nth(0).expect("REASON").to_digit(10).unwrap() as u8,
-            small_board: v[2].chars().nth(0).expect("REASON").to_digit(10).unwrap() as u8
+            big_board: v[1].chars().nth(0).expect("Invalid move_string").to_digit(10).unwrap() as u8,
+            small_board: v[2].chars().nth(0).expect("Invalid move_string").to_digit(10).unwrap() as u8,
         };
     }
 }
@@ -23,7 +24,6 @@ impl Moove {
 pub struct Board {
     state: [char;81]
 }
-
 impl Board {
 
     fn new() -> Board {
@@ -35,7 +35,7 @@ impl Board {
         let mut b = Board::new();
 
         println!("Waiting for first four moves...");
-        let mut first_four_moves = file_to_string("first_four_moves", true);
+        let mut first_four_moves = file_to_string(r"first_four_moves", true);
         println!("Found first_four_moves.txt: \n {}", first_four_moves);
 
         println!("Placing first moves on Board...");
@@ -60,8 +60,13 @@ impl Board {
 
     pub fn place_move(&mut self, mv:Moove){
         println!("Move:{} ({}, {})", mv.team, mv.big_board, mv.small_board);
-        self.state[Board::get_index(mv.big_board, mv.small_board)] = mv.team.chars().nth(0).unwrap();
+        let symbol:char;
+        if mv.team.to_ascii_uppercase() == TEAM_NAME.to_ascii_uppercase() {
+            symbol = 'X';
+        }else { symbol = 'O' }
+        self.state[Board::get_index(mv.big_board, mv.small_board)] =symbol;
         //self.print();
+        //TODO this should call a function to write this move to the file
     }
 
     pub fn print(&self){
