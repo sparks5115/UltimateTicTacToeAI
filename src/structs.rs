@@ -91,24 +91,36 @@ impl Board {
         print!("Getting heuristic...");
         let big_board_state = self.get_big_board_state();
         let mut h_val = 0;
-        let temp = self.is_winning_or_losing() as i32;
+        let temp = self.is_winning_or_losing(Some(big_board_state)) as i32;
         if temp != 0 {
             return temp * i32::MAX; //if the state is winning or losing, there is no need to continue
         }
 
         //todo all these
-        // h_val += HEURISTIC.board_win_loss * Board.net_boards_won();
-        // h_val += HEURISTIC.two_boards_in_row * Board.net_two_boards_in_row();
-        // h_val += HEURISTIC.block_opponent_board * Board.net_blocked_boards();
-        // h_val += HEURISTIC.useless_board_win * Board.net_useless_boards();
-        // h_val += HEURISTIC.two_in_row * Board.net_two_in_row();
-        // h_val += HEURISTIC.block_opponent * Board.net_blocked();
-        // h_val += HEURISTIC.useless_move * Board.net_useless();
+        h_val += HEURISTIC.board_win_loss * (self.net_boards_won(Some(big_board_state)) as i32);
+        // h_val += HEURISTIC.two_boards_in_row * self.net_two_boards_in_row();
+        // h_val += HEURISTIC.block_opponent_board * self.net_blocked_boards();
+        // h_val += HEURISTIC.useless_board_win * self.net_useless_boards();
+        // h_val += HEURISTIC.two_in_row * self.net_two_in_row();
+        // h_val += HEURISTIC.block_opponent * self.net_blocked();
+        // h_val += HEURISTIC.useless_move * self.net_useless();
         return h_val;
     }
 
-    fn is_winning_or_losing(&self) -> i8{
-        is_board_won(&self.get_big_board_state()[..])
+    fn is_winning_or_losing(&self, big_board_state: Option<[i8; 9]>) -> i8{
+        let bbs = match big_board_state {
+            None => {self.get_big_board_state()},
+            Some(a) => {a},
+        };
+        is_board_won(&bbs[..])
+    }
+
+    pub fn net_boards_won(&self, big_board_state: Option<[i8; 9]>) -> i8{
+        let bbs = match big_board_state {
+            None => {self.get_big_board_state()},
+            Some(a) => {a},
+        };
+        bbs.iter().sum()
     }
 
     pub fn get_big_board_state(&self) -> [i8; 9]{
