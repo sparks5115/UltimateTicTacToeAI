@@ -102,7 +102,7 @@ impl Board {
         return h_val;
     }
 
-    pub fn is_winning_or_losing(&self) -> i8{
+    fn is_winning_or_losing(&self) -> i8{
         is_board_won(&self.get_big_board_state()[..])
     }
 

@@ -13,6 +13,7 @@ pub fn main() {
     // initialize board
     let mut board = Board::initialize();
     board.print();
+    println!("{}", board.get_heuristic_value());
 
     // go and wait for turn while the game is not won
     loop {
@@ -21,9 +22,9 @@ pub fn main() {
         // set time number (?) / record time
 
         // check if end_game exists; if so, gameWon = true and break;
-        if "endGame exists" { //TODO make this work
-            break;
-        }
+        // if "endGame exists" { //TODO make this work
+        //     break;
+        // }
 
 
         // read in move_file
@@ -36,6 +37,8 @@ pub fn main() {
 
     }
 }
+
+
 /*
 fn minimax(maximizingPlayer: bool, depth: i32, mut alpha: i32, mut beta: i32, node: TreeNode) -> i32 {
     // if depth == 0 or terminal node
