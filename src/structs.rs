@@ -1,4 +1,4 @@
-use helpers::file_to_string;
+use std::fs::read_to_string;
 use crate::{helpers};
 use crate::helpers::is_board_won;
 use super::TEAM_NAME;
@@ -48,7 +48,12 @@ impl Board {
         let mut b = Board::new();
 
         println!("Waiting for first four moves...");
-        let mut first_four_moves = file_to_string(r"first_four_moves", true);
+        let mut ffm_result = read_to_string(r"first_four_moves");
+        while ffm_result.is_err() { //block until it finds the file
+            ffm_result = read_to_string(r"first_four_moves");
+        }
+        let mut first_four_moves: String = ffm_result.expect("wohoo");
+
         println!("Found first_four_moves.txt: \n {}", first_four_moves);
 
         println!("Placing first moves on Board...");

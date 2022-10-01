@@ -1,21 +1,8 @@
-use std::fs::read_to_string;
+use std::fs::{File, read_to_string};
+use std::io::Write;
 use std::thread::sleep;
 use std::time;
-
-pub fn file_to_string(name: &str, wait_for_file: bool) -> String {
-    loop{
-        let file_string_result = read_to_string(name);
-        match file_string_result {
-            Ok(string) => return string,
-            Err(error) => {
-                if !wait_for_file {
-                    panic!("File Not Found: {} \n Error: {}", name, error)
-                }
-            }
-        };
-        sleep(time::Duration::from_millis(10));
-    }
-}
+use crate::structs::Moove;
 
 /// # Input:
 /// An array of 9 that denotes a singular, classic tic tac toe game where 1 is the player, -1 is the opponent, and 0 is an empty square
@@ -48,4 +35,11 @@ pub fn is_board_won(board_state: &[i8]) -> i8{
     if diag2_total == -3 {return -1;}
 
     return 0; //no winner
+}
+
+pub fn write_to_move_file(moove:Moove){
+    let mut f = File::create("move_file");
+    f.expect("Failed to open move_file")
+        .write_all(format!("{} {} {}", moove.team, moove.big_board, moove.small_board).as_ref())
+        .expect("Failed to write to move_file");
 }
