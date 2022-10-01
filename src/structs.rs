@@ -128,5 +128,5 @@ pub struct Heuristic {
 pub struct TreeNode {
     board: Board,
     heuristic_value: i32,
-    children: Vec<TreeNode>
+    pub(crate) children: Vec<TreeNode>
 }
