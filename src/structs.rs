@@ -2,13 +2,25 @@ use helpers::file_to_string;
 use crate::{helpers};
 use super::TEAM_NAME;
 
-pub struct Moove {
+const HEURISTIC: Heuristic = Heuristic{
+    total_win_loss: i32::MAX,
+    board_win_loss: 100,
+    two_boards_in_row: 200,
+    block_opponent_board: 150,
+    useless_board_win: -150,
+    two_in_row: 5,
+    block_opponent: 20,
+    useless_move: -20,
+    allow_opponent_wildcard: -75 //todo test this maybe?
+};
+
+pub struct Moove {//like a cow
     pub team: String,
     pub big_board: u8,
     pub small_board: u8,
-} //like a cow
+}
 impl Moove {
-    pub(crate) fn parse_from_string(move_string: String) -> Moove {
+    pub fn parse_from_string(move_string: String) -> Moove {
 
         let v: Vec<&str> = move_string.trim().split(' ').collect(); //this only works if it is formatted correctly
 
@@ -69,6 +81,16 @@ impl Board {
         //TODO this should call a function to write this move to the file
     }
 
+    // pub fn get_heuristic_value(&self){
+    //     print!("Getting heuristic...");
+    //     let mut h = 0;
+    //     let temp = self.is_winning_or_losing();
+    //     if temp != 0 {
+    //         return temp; //if the state is winning or losing, there is no need to continue
+    //     }
+    //     h +=
+    // }
+
     pub fn print(&self){
         println!("-------------------------------------");
         for row in 0..3 {
@@ -89,4 +111,22 @@ impl Board {
             }println!("-------------------------------------");
         }
     }
+}
+
+pub struct Heuristic {
+    total_win_loss: i32, //game win or loss
+    board_win_loss: i32, //win or loss on small board
+    two_boards_in_row: i32, //win two boards in a row
+    block_opponent_board: i32, //block opponent's two in a row
+    useless_board_win: i32, //board that is blocked
+    two_in_row: i32, //two in a row on small board
+    block_opponent: i32, //block on small board
+    useless_move: i32, //blocked move on small board
+    allow_opponent_wildcard: i32 //send opponent to won/full board, allowing them to move anywhere
+}
+
+pub struct TreeNode {
+    board: Board,
+    heuristic_value: i32,
+    children: Vec<TreeNode>
 }
