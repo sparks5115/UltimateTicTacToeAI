@@ -7,10 +7,34 @@ use crate::structs::TreeNode;
 
 
 pub const TEAM_NAME:&str = "TEMP"; //TODO come up with real team name
+pub const TIME_LIMIT:u8 = 10;
 
 pub fn main() {
+    // initialize board
     let mut board = Board::initialize();
     board.print();
+
+    // go and wait for turn while the game is not won
+    loop {
+        // wait for groupname.go
+
+        // set time number (?) / record time
+
+        // check if end_game exists; if so, gameWon = true and break;
+        if "endGame exists" { //TODO make this work
+            break;
+        }
+
+
+        // read in move_file
+
+        // determine step
+
+        // write to move_file
+
+        // note/print time?
+
+    }
 }
 
 fn minimax(maximizingPlayer: bool, depth: i32, mut alpha: i32, mut beta: i32, node: TreeNode) {
@@ -29,7 +53,6 @@ fn minimax(maximizingPlayer: bool, depth: i32, mut alpha: i32, mut beta: i32, no
             alpha = max(alpha, bestValue);
             if beta <= alpha { break; }
         }
-
         return bestValue;
     }
 
