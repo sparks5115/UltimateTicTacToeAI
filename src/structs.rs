@@ -1,5 +1,6 @@
 use helpers::file_to_string;
 use crate::{helpers};
+use crate::helpers::is_board_won;
 use super::TEAM_NAME;
 
 const HEURISTIC: Heuristic = Heuristic{
@@ -34,12 +35,12 @@ impl Moove {
 
 
 pub struct Board {
-    state: [char;81]
+    state: [i8;81]
 }
 impl Board {
 
     fn new() -> Board {
-        Board{state: [' '; 81]}
+        Board{state: [0; 81]}
     }
 
     pub fn initialize() -> Board {
@@ -72,24 +73,54 @@ impl Board {
 
     pub fn place_move(&mut self, mv:Moove){
         println!("Move:{} ({}, {})", mv.team, mv.big_board, mv.small_board);
-        let symbol:char;
+        let symbol:i8;
         if mv.team.to_ascii_uppercase() == TEAM_NAME.to_ascii_uppercase() {
-            symbol = 'X';
-        }else { symbol = 'O' }
+            symbol = 1;
+        }else { symbol = -1 }
         self.state[Board::get_index(mv.big_board, mv.small_board)] =symbol;
         //self.print();
         //TODO this should call a function to write this move to the file
     }
 
-    // pub fn get_heuristic_value(&self){
-    //     print!("Getting heuristic...");
-    //     let mut h = 0;
-    //     let temp = self.is_winning_or_losing();
-    //     if temp != 0 {
-    //         return temp; //if the state is winning or losing, there is no need to continue
-    //     }
-    //     h +=
-    // }
+    pub fn get_heuristic_value(&self) -> i32{
+        print!("Getting heuristic...");
+        let big_board_state = self.get_big_board_state();
+        let mut h_val = 0;
+        let temp = self.is_winning_or_losing() as i32;
+        if temp != 0 {
+            return temp * i32::MAX; //if the state is winning or losing, there is no need to continue
+        }
+
+        //todo all these
+        // h_val += HEURISTIC.board_win_loss * Board.net_boards_won();
+        // h_val += HEURISTIC.two_boards_in_row * Board.net_two_boards_in_row();
+        // h_val += HEURISTIC.block_opponent_board * Board.net_blocked_boards();
+        // h_val += HEURISTIC.useless_board_win * Board.net_useless_boards();
+        // h_val += HEURISTIC.two_in_row * Board.net_two_in_row();
+        // h_val += HEURISTIC.block_opponent * Board.net_blocked();
+        // h_val += HEURISTIC.useless_move * Board.net_useless();
+        return h_val;
+    }
+
+    pub fn is_winning_or_losing(&self) -> i8{
+        is_board_won(&self.get_big_board_state()[..])
+    }
+
+    pub fn get_big_board_state(&self) -> [i8; 9]{
+        let mut big_board: [i8; 9] = [0 as i8; 9];
+        for i in 0..8 {
+            big_board[i] = self.board_is_won(i as u8);
+        }
+        return big_board;
+    }
+
+    pub fn board_is_won(&self, board_number:u8) -> i8{
+        return helpers::is_board_won(self.get_small_board_state(board_number));
+    }
+
+    pub fn get_small_board_state(&self, board_number:u8) -> &[i8] {
+        &self.state[(board_number*9) as usize .. (board_number*9 + 9) as usize]
+    }
 
     pub fn print(&self){
         println!("-------------------------------------");
@@ -98,9 +129,9 @@ impl Board {
                 for col in 0..3 {
                     for subcol in 0..3 {
                         let rep: String = match self.state[(row * 27) + (subrow * 3) + (col * 9) + subcol]{
-                            ' '=>"..".to_string(),
-                            'X'=>"❌".to_string(),
-                            'O'=>"〇".to_string(),
+                            0=>"..".to_string(),
+                            1=>"❌".to_string(),
+                            -1=>"〇".to_string(),
                             _=>"😱".to_string(), //this symbol is bad
                         };
                         print!(" {} ", rep);
