@@ -2,10 +2,11 @@ mod structs;
 mod helpers;
 
 use std::cmp::{max, min};
+use std::time::{Duration, Instant};
 use structs::Board;
 use crate::structs::TreeNode;
 
-
+               
 pub const TEAM_NAME:&str = "TEMP"; //TODO come up with real team name
 pub const TIME_LIMIT:u8 = 10;
 
@@ -17,14 +18,14 @@ pub fn main() {
 
     // go and wait for turn while the game is not won
     loop {
-        // wait for groupname.go
-
+         //wait for groupname.go
+        
         // set time number (?) / record time
-
-        // check if end_game exists; if so, gameWon = true and break;
-        // if "endGame exists" { //TODO make this work
-        //     break;
-        // }
+        let now = Instant::now();
+         //check if end_game exists; if so, gameWon = true and break;
+         //if "endGame exists" { //TODO make this work
+         //    break;
+         //}
 
 
         // read in move_file
@@ -32,11 +33,12 @@ pub fn main() {
         // determine step (Moove)
 
         // write to move_file
-
+        let elapsed_time = now.elapsed();
         // note/print time?
-
+        println!("Moove took {} seconds.", elapsed_time.as_secs());
+        }
     }
-}
+
 
 
 /*
