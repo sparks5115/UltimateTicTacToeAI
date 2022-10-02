@@ -37,6 +37,7 @@ pub fn is_board_won(board_state: &[i8]) -> i8{
     return 0; //no winner
 }
 
+///writes to the move_file
 pub fn write_to_move_file(moove:Moove){
     let mut f = File::create("move_file");
     f.expect("Failed to open move_file")

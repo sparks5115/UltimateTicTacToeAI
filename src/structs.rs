@@ -3,6 +3,7 @@ use crate::{helpers};
 use crate::helpers::is_board_won;
 use super::TEAM_NAME;
 
+///constant that holds our decided upon heuristic values
 const HEURISTIC: Heuristic = Heuristic{
     total_win_loss: i32::MAX,
     board_win_loss: 100,
@@ -15,12 +16,16 @@ const HEURISTIC: Heuristic = Heuristic{
     allow_opponent_wildcard: -75 //todo test this maybe?
 };
 
+///holds a move made by either team
 pub struct Moove {//like a cow
     pub team: String,
     pub big_board: u8,
     pub small_board: u8,
 }
-impl Moove {
+impl Moove { //implementation? Inside here are functions for the struct
+    ///parses a string (such as the one in move_file) into a Moove struct
+    /// # Examples:
+    /// m: Moove = Moove::parse_from_string(read_to_string("move_file"));
     pub fn parse_from_string(move_string: String) -> Moove {
 
         let v: Vec<&str> = move_string.trim().split(' ').collect(); //this only works if it is formatted correctly
@@ -33,7 +38,9 @@ impl Moove {
     }
 }
 
-
+///state of the board is stored in an array as follows:
+/// big_board number 0 takes up spaces 0-8
+/// big_board number 1 takes up spaces 9-15
 pub struct Board {
     state: [i8;81]
 }
@@ -47,12 +54,12 @@ impl Board {
 
         let mut b = Board::new();
 
-        println!("Waiting for first four moves...");
+        println!("Waiting for first four moves..."); // this line + next line + 5 ahead for checking if game won
         let mut ffm_result = read_to_string(r"first_four_moves");
         while ffm_result.is_err() { //block until it finds the file
             ffm_result = read_to_string(r"first_four_moves");
         }
-        let mut first_four_moves: String = ffm_result.expect("wohoo");
+        let mut first_four_moves: String = ffm_result.expect("wohoo"); // becuase you wait until there is not an error teachnically this isn't needed, but it'll freak anyways
 
         println!("Found first_four_moves.txt: \n {}", first_four_moves);
 
@@ -72,10 +79,12 @@ impl Board {
         return b;
     }
 
+    ///Converts from notation of big_board, small_board into the index in Board's state
     pub fn get_index(big_board: u8, small_board: u8) -> usize{
         ((big_board*9) + small_board) as usize
     }
 
+    ///called on a board, places a Moove onto its own state
     pub fn place_move(&mut self, mv:Moove){
         println!("Move:{} ({}, {})", mv.team, mv.big_board, mv.small_board);
         let symbol:i8;
@@ -87,6 +96,7 @@ impl Board {
         //TODO this should call a function to write this move to the file
     }
 
+    ///gets the heuristic of the board that it is called on
     pub fn get_heuristic_value(&self) -> i32{
         print!("Getting heuristic...");
         let big_board_state = self.get_big_board_state();
@@ -107,6 +117,11 @@ impl Board {
         return h_val;
     }
 
+    ///checks if the game is over, and one team has won (checks if it's a terminal node)
+    /// # Returns:
+    /// -1 if opponent has won
+    /// 1 if we have won
+    /// 0 if not won
     pub fn is_winning_or_losing(&self, big_board_state: Option<[i8; 9]>) -> i8{
         let bbs = match big_board_state {
             None => {self.get_big_board_state()},
@@ -115,6 +130,7 @@ impl Board {
         is_board_won(&bbs[..])
     }
 
+    ///calculates boards won by us, minus boards won by opponent
     pub fn net_boards_won(&self, big_board_state: Option<[i8; 9]>) -> i8{
         let bbs = match big_board_state {
             None => {self.get_big_board_state()},
@@ -123,6 +139,8 @@ impl Board {
         bbs.iter().sum()
     }
 
+    ///checks the entire board.state and returns an array representing the board as a singular tic tac toe board.
+    ///  (if you ignore that the individual games are games and treat them as their results, it treats the big board as a simple tic tac toe game)
     pub fn get_big_board_state(&self) -> [i8; 9]{
         let mut big_board: [i8; 9] = [0 as i8; 9];
         for i in 0..8 {
@@ -131,14 +149,22 @@ impl Board {
         return big_board;
     }
 
+    ///wraps is_board_won for convenience such that it takes a board number as an argument instead of an array representing a board
+    /// # Returns:
+    /// -1 if opponent has won
+    /// 1 if we have won
+    /// 0 if not won
     pub fn board_is_won(&self, board_number:u8) -> i8{
         return is_board_won(self.get_small_board_state(board_number));
     }
 
+    ///returns an array of length 9 representing a single small board in the game given a board number
     pub fn get_small_board_state(&self, board_number:u8) -> &[i8] {
         &self.state[(board_number*9) as usize .. (board_number*9 + 9) as usize]
     }
 
+    ///# for debugging purposes only
+    /// prints the board
     pub fn print(&self){
         println!("-------------------------------------");
         for row in 0..3 {
@@ -161,6 +187,8 @@ impl Board {
     }
 }
 
+//TODO could likely change all of the heuristic stuff to i16 for space
+/// just an easy way to encompass our heuristic in one place
 pub struct Heuristic {
     total_win_loss: i32, //game win or loss: three big boards in a row
     board_win_loss: i32, //win or loss on small board
@@ -173,9 +201,17 @@ pub struct Heuristic {
     allow_opponent_wildcard: i32 //send opponent to won/full board, allowing them to move anywhere
 }
 
+///wraps a board and all the information needed to run the minimax algorithm
 pub struct TreeNode {
     pub board: Board,
     pub last_move: Moove,
     pub heuristic_value: i32,
-    pub(crate) children: Vec<TreeNode>
+    pub children: Vec<TreeNode>
+}
+
+impl TreeNode{
+    ///builds all of this node's children (a collection of tree nodes denoting the next legal moves that could be made)
+    pub fn find_all_children(&self){
+        //TODO
+    }
 }
