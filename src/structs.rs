@@ -107,7 +107,7 @@ impl Board {
         return h_val;
     }
 
-    fn is_winning_or_losing(&self, big_board_state: Option<[i8; 9]>) -> i8{
+    pub fn is_winning_or_losing(&self, big_board_state: Option<[i8; 9]>) -> i8{
         let bbs = match big_board_state {
             None => {self.get_big_board_state()},
             Some(a) => {a},
@@ -132,7 +132,7 @@ impl Board {
     }
 
     pub fn board_is_won(&self, board_number:u8) -> i8{
-        return helpers::is_board_won(self.get_small_board_state(board_number));
+        return is_board_won(self.get_small_board_state(board_number));
     }
 
     pub fn get_small_board_state(&self, board_number:u8) -> &[i8] {
@@ -162,7 +162,7 @@ impl Board {
 }
 
 pub struct Heuristic {
-    total_win_loss: i32, //game win or loss
+    total_win_loss: i32, //game win or loss: three big boards in a row
     board_win_loss: i32, //win or loss on small board
     two_boards_in_row: i32, //win two boards in a row
     block_opponent_board: i32, //block opponent's two in a row
@@ -174,7 +174,8 @@ pub struct Heuristic {
 }
 
 pub struct TreeNode {
-    board: Board,
-    heuristic_value: i32,
+    pub board: Board,
+    pub last_move: Moove,
+    pub heuristic_value: i32,
     pub(crate) children: Vec<TreeNode>
 }

@@ -41,37 +41,35 @@ pub fn main() {
 
 
 
-/*
-fn minimax(maximizingPlayer: bool, depth: i32, mut alpha: i32, mut beta: i32, node: TreeNode) -> i32 {
+fn minimax(maximizing_player: bool, depth: i32, mut alpha: i32, mut beta: i32, mut node: TreeNode) -> i32 {
+
     // if depth == 0 or terminal node
-    if (depth == 0) || (0 != 1) {
-
+    if (depth == 0) || (node.board.is_winning_or_losing(None) != 0) {
+        //evaluate heuristic and return
     }
 
-    if maximizingPlayer {
-        let mut bestValue = i32::MIN;
+    if maximizing_player {
+        let mut best_value = i32::MIN;
 
         // loop through child nodes
         for child in node.children {
-            let value = minimax(!maximizingPlayer, depth-1, alpha, beta, child);
-            bestValue = i32::max(bestValue, value);
-            alpha = max(alpha, bestValue);
+            node.heuristic_value = minimax(!maximizing_player, depth - 1, alpha, beta, child);
+            best_value = i32::max(best_value, node.heuristic_value);
+            alpha = max(alpha, best_value);
             if beta <= alpha { break; }
         }
-        return bestValue;
-    }
-
-    elif !maximizingPlayer {
-        let mut bestValue = i32::MAX;
+        return best_value;
+    } else {
+        let mut best_value = i32::MAX;
 
         // loop through child nodes
         for child in node.children {
-            let value = minimax(!maximizingPlayer, depth-1, alpha, beta, child);
-            bestValue = min(bestValue, value);
+            node.heuristic_value = minimax(!maximizing_player, depth - 1, alpha, beta, child);
+            best_value = min(best_value, node.heuristic_value);
             if beta <= alpha { break; }
         }
-        return bestValue;
+        return best_value;
     }
 
 }
-*/
+
