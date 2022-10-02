@@ -139,6 +139,12 @@ impl Board {
         bbs.iter().sum()
     }
 
+    pub fn net_two_boards_in_row(&self, big_board_state: Option<[i8; 9]>) -> i8{
+        let mut num_two_boards_in_row = 0;
+
+        return num_two_boards_in_row;
+    }
+
     ///checks the entire board.state and returns an array representing the board as a singular tic tac toe board.
     ///  (if you ignore that the individual games are games and treat them as their results, it treats the big board as a simple tic tac toe game)
     pub fn get_big_board_state(&self) -> [i8; 9]{

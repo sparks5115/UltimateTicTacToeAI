@@ -23,14 +23,28 @@ pub fn main() {
         // set time number (?) / record time
         let now = Instant::now();
          //check if end_game exists; if so, gameWon = true and break;
-         //if "endGame exists" { //TODO make this work
-         //    break;
-         //}
-
+         //if "endGame exists" { break; } //TODO make this work
 
         // read in move_file
 
         // determine step (Moove)
+        // While timer isn't done:
+        let mut depth = 0;
+        let mut alpha = i32::MIN;
+        let mut beta = i32::MAX;
+
+        loop {
+            // get value at that depth
+            value = minimax(true, depth, alpha, beta, lastMove);
+
+            // give value to timer thread
+
+            // iterate depth
+            depth += 1;
+
+            // if timer thread = finished (read a message sent by the thread?)
+            break;
+        }
 
         // write to move_file
         let elapsed_time = now.elapsed();
