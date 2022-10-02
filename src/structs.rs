@@ -1,6 +1,6 @@
 use std::fs::read_to_string;
 use crate::{helpers};
-use crate::helpers::is_board_won;
+use crate::helpers::{is_board_won, is_two_in_row_us};
 use super::TEAM_NAME;
 
 ///constant that holds our decided upon heuristic values
@@ -108,7 +108,7 @@ impl Board {
 
         //todo all these
         h_val += HEURISTIC.board_win_loss * (self.net_boards_won(Some(big_board_state)) as i32);
-        // h_val += HEURISTIC.two_boards_in_row * self.net_two_boards_in_row();
+        h_val += HEURISTIC.two_boards_in_row * (self.net_two_boards_in_row(Some(big_board_state)) as i32);
         // h_val += HEURISTIC.block_opponent_board * self.net_blocked_boards();
         // h_val += HEURISTIC.useless_board_win * self.net_useless_boards();
         // h_val += HEURISTIC.two_in_row * self.net_two_in_row();
@@ -139,8 +139,10 @@ impl Board {
         bbs.iter().sum()
     }
 
-    pub fn net_two_boards_in_row(&self, big_board_state: Option<[i8; 9]>) -> i8{
-        let mut num_two_boards_in_row = 0;
+    /// calculates how many sets of 2 big boards in a row there are
+    /// TODO: Why is it when you directly return num_two_boards_in_row in the first line does it error
+    pub fn net_two_boards_in_row(&self, big_board_state: Option<[i8; 9]>) -> i8 {
+        let num_two_boards_in_row = is_two_in_row_us(big_board_state: &[i8]);
 
         return num_two_boards_in_row;
     }
