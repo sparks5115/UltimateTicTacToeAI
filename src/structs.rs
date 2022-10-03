@@ -44,7 +44,6 @@ impl Moove { //implementation? Inside here are functions for the struct
 pub struct Board {
     state: [i8;81],
     last_move: Moove,
-
 }
 impl Board {
 
@@ -83,6 +82,11 @@ impl Board {
             }
         }
         return b;
+    }
+
+    ///returns true if it is our turn to make a move, false otherwise
+    pub fn our_turn(&self) -> bool{
+        return self.last_move.team != TEAM_NAME;
     }
 
     ///Converts from notation of big_board, small_board into the index in Board's state
