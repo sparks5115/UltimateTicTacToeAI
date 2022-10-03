@@ -2,6 +2,8 @@ mod structs;
 mod helpers;
 
 use std::cmp::{max, min};
+use std::fs::read_to_string;
+use std::thread;
 use std::time::{Duration, Instant};
 use structs::Board;
 use crate::structs::TreeNode;
@@ -16,43 +18,64 @@ pub fn main() {
     board.print();
     println!("{}", board.get_heuristic_value());
 
-    // go and wait for turn while the game is not won
+    if board.our_turn() {//it is already our turn
+        calculate_best_move(&board);
+
+    } else { // wait for turn
+        let mut temp = read_to_string(TEAM_NAME.to_owned() + ".go");
+        while temp.is_err() { //block until it finds the file
+            temp = read_to_string(TEAM_NAME.to_owned() + ".go");
+        }//once this breaks, we have found our file
+        calculate_best_move(&board);
+    }
+}
+
+pub fn calculate_best_move(board: &Board) {
+    thread::spawn(|| {
+        for i in 1..10 {
+            println!("hi number {} from the spawned thread!", i);
+            thread::sleep(Duration::from_millis(1));
+        }
+    });
+
+    for i in 1..5 {
+        println!("hi number {} from the main thread!", i);
+        thread::sleep(Duration::from_millis(1));
+    }
+}
+
+pub fn depth_limited(board: &Board){
+// set time number (?) / record time
+    let now = Instant::now();
+//check if end_game exists; if so, gameWon = true and break;
+//if "endGame exists" { break; } //TODO make this work
+
+// read in move_file
+
+// determine step (Moove)
+// While timer isn't done:
+    let mut depth = 0;
+    let mut alpha = i32::MIN;
+    let mut beta = i32::MAX;
+
     loop {
-         //wait for groupname.go
+// get value at that depth
+        let value = minimax(true, depth, alpha, beta, TreeNode::new(board));
 
-        // set time number (?) / record time
-        let now = Instant::now();
-         //check if end_game exists; if so, gameWon = true and break;
-         //if "endGame exists" { break; } //TODO make this work
+// give value to timer thread
 
-        // read in move_file
+// iterate depth
+        depth += 1;
 
-        // determine step (Moove)
-        // While timer isn't done:
-        let mut depth = 0;
-        let mut alpha = i32::MIN;
-        let mut beta = i32::MAX;
-
-        loop {
-            // get value at that depth
-            let value = minimax(true, depth, alpha, beta, TreeNode::new(&board));
-
-            // give value to timer thread
-
-            // iterate depth
-            depth += 1;
-
-            // if timer thread = finished (read a message sent by the thread?)
-            break;
-        }
-
-        // write to move_file
-        let elapsed_time = now.elapsed();
-        // note/print time?
-        println!("Moove took {} seconds.", elapsed_time.as_secs());
-        }
+// if timer thread = finished (read a message sent by the thread?)
+        break;
     }
 
+// write to move_file
+    let elapsed_time = now.elapsed();
+// note/print time?
+//println!("Moove took {} seconds.", elapsed_time.as_secs());
+}
 
 
 fn minimax(maximizing_player: bool, depth: i32, mut alpha: i32, mut beta: i32, mut node: TreeNode) -> i32 {
