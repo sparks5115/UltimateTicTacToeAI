@@ -1,8 +1,8 @@
 mod structs;
 mod helpers;
 
-use std::cmp::{max, min};
 use std::fs::read_to_string;
+use std::cmp::{max, min};
 use std::sync::mpsc;
 use std::sync::mpsc::TryRecvError;
 use std::thread;
@@ -59,7 +59,7 @@ pub fn calculate_best_move(board: &Board) {
         }
         println!("Timer: sending kill message");
         send_kill.send(true).unwrap();
-        
+
         println!("Timer: submitting move");
         //TODO submit the move
     });
@@ -72,29 +72,25 @@ pub fn calculate_best_move(board: &Board) {
 }
 
 pub fn depth_limited(board: &Board) -> Moove{
-// set time number (?) / record time
+    // set time number (?) / record time
     let now = Instant::now();
-//check if end_game exists; if so, gameWon = true and break;
-//if "endGame exists" { break; } //TODO make this work
+    //check if end_game exists; if so, gameWon = true and break;
+    //if "endGame exists" { break; } //TODO make this work
 
-// read in move_file
-
-// determine step (Moove)
-// While timer isn't done:
+    // While timer isn't done:
     let mut depth = 0;
     let mut alpha = i32::MIN;
     let mut beta = i32::MAX;
+    // read in move_file
 
     loop {
-// get value at that depth
+        // get value at that depth
         let value = minimax(true, depth, alpha, beta, TreeNode::new(board));
 
-// give value to timer thread
-
-// iterate depth
+        // iterate depth
         depth += 1;
 
-// if timer thread = finished (read a message sent by the thread?)
+        // if timer thread = finished (read a message sent by the thread?)
         break;
     }
 

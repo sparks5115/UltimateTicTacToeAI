@@ -140,6 +140,12 @@ impl Board {
         return h_val;
     }
 
+    /// calculates number of boards blocked in all directions for us - them
+    pub fn net_useless_boards(&self, big_board_state: Option<[i8; 9]>) -> i8{
+        let bbs =self.extract_big_board_state(big_board_state);
+        return 5;
+    }
+
     ///checks if the game is over, and one team has won (checks if it's a terminal node)
     /// # Returns: -1 if opponent has won, 1 if we have won, 0 if not won
     pub fn is_winning_or_losing(&self, big_board_state: Option<[i8; 9]>) -> i8{
@@ -187,7 +193,7 @@ impl Board {
     pub fn get_big_board_state(&self) -> [i8; 9]{
         let mut big_board: [i8; 9] = [0 as i8; 9];
         for i in 0..8 {
-            big_board[i] = self.board_is_won(i as u8);
+            big_board[i] = self.board_is_won( &(i as u8));
         }
         return big_board;
     }
@@ -197,12 +203,12 @@ impl Board {
     /// -1 if opponent has won
     /// 1 if we have won
     /// 0 if not won
-    pub fn board_is_won(&self, board_number:u8) -> i8{
+    pub fn board_is_won(&self, board_number: &u8) -> i8{
         return is_board_won(self.get_small_board_state(board_number));
     }
 
     ///returns an array of length 9 representing a single small board in the game given a board number
-    pub fn get_small_board_state(&self, board_number:u8) -> &[i8] {
+    pub fn get_small_board_state(&self, board_number:&u8) -> &[i8] {
         &self.state[(board_number*9) as usize .. (board_number*9 + 9) as usize]
     }
 
@@ -263,6 +269,37 @@ impl TreeNode<'_>{
     ///builds all of this node's children (a collection of tree nodes denoting the next legal moves that could be made)
     pub fn find_all_children(&self) -> Vec<TreeNode>{
         //TODO
-        return Vec::new();
+
+        // TODO initialize Vec<TreeNode>
+        let all_children: Vec<TreeNode> = Vec::new();
+
+        // find the last move
+        let last_move = &self.board.last_move;
+        let next_board = &last_move.small_board;
+
+        // if the square of that move is won:
+        if self.board.board_is_won(next_board) != 0 {
+            // go through all other squares
+            for i in 0..9 {
+                // if square is not won
+                if 0 == self.board.board_is_won(&i) {
+                    // go through every space in square
+                    for j in 0..9 {
+                        // if space is open, add TreeNode to vector
+                        // TODO: how to test this?
+                    }
+                }
+
+            }
+        }
+        else {
+            // go through every space in square
+            for i in 0..9 {
+                // if space is open, add TreeNode to vector
+                // TODO: just like above; how to do this
+            }
+        }
+
+        return Vec::new(); // TODO: change to the vector initialized at the beginning
     }
 }
