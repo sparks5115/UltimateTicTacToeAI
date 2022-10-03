@@ -18,11 +18,20 @@ const HEURISTIC: Heuristic = Heuristic{
 
 ///holds a move made by either team
 pub struct Moove {//like a cow
-    pub team: String,
+pub team: String,
     pub big_board: u8,
     pub small_board: u8,
 }
 impl Moove { //implementation? Inside here are functions for the struct
+pub fn new() -> Moove{
+    return Moove{
+        team: "".to_string(),
+        big_board: 9,
+        small_board: 9
+    }
+}
+
+
     ///parses a string (such as the one in move_file) into a Moove struct
     /// # Examples:
     /// m: Moove = Moove::parse_from_string(read_to_string("move_file"));

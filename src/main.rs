@@ -3,14 +3,17 @@ mod helpers;
 
 use std::cmp::{max, min};
 use std::fs::read_to_string;
+use std::sync::mpsc;
+use std::sync::mpsc::TryRecvError;
 use std::thread;
+use std::thread::{current, sleep};
 use std::time::{Duration, Instant};
 use structs::Board;
-use crate::structs::TreeNode;
+use crate::structs::{Moove, TreeNode};
 
 
 pub const TEAM_NAME:&str = "TEMP"; //TODO come up with real team name
-pub const TIME_LIMIT:u8 = 10;
+pub const TIME_LIMIT:Duration = Duration::from_secs(10);
 
 pub fn main() {
     // initialize board
@@ -31,20 +34,44 @@ pub fn main() {
 }
 
 pub fn calculate_best_move(board: &Board) {
-    thread::spawn(|| {
-        for i in 1..10 {
-            println!("hi number {} from the spawned thread!", i);
-            thread::sleep(Duration::from_millis(1));
+    let (send_move, receive_move) = mpsc::channel::<Moove>();
+    let (send_kill, receive_kill) = mpsc::channel::<bool>();
+
+    let timer_handler = thread::spawn(move || {
+        let start = Instant::now();
+        let time_to_wait = Duration::from_secs(TIME_LIMIT.as_secs() - 1);//TODO give this closer time
+        println!("Timer: waiting for {} seconds", time_to_wait.as_secs());
+        let mut best_so_far: Moove;
+        while start.elapsed() < time_to_wait { //tries to receive new moves until it needs to submit
+            match receive_move.try_recv() {
+                Ok(mv) => {
+                    println!("{}", mv.to_string());
+                    best_so_far = mv;
+                }
+                Err(e) => {match e {
+                    TryRecvError::Empty => {}
+                    TryRecvError::Disconnected => {
+                        println!("main thread terminated the connection");
+                        break; //the main thread has disconnected for some reason (possibly finished all calculations)
+                    }
+                }}
+            }
         }
+        println!("Timer: sending kill message");
+        send_kill.send(true).unwrap();
+        
+        println!("Timer: submitting move");
+        //TODO submit the move
     });
 
-    for i in 1..5 {
-        println!("hi number {} from the main thread!", i);
-        thread::sleep(Duration::from_millis(1));
+    for i in  0..5{
+        send_move.send(depth_limited(board)).unwrap();
+        sleep(Duration::from_secs(1));
     }
+    timer_handler.join().unwrap();
 }
 
-pub fn depth_limited(board: &Board){
+pub fn depth_limited(board: &Board) -> Moove{
 // set time number (?) / record time
     let now = Instant::now();
 //check if end_game exists; if so, gameWon = true and break;
@@ -75,6 +102,7 @@ pub fn depth_limited(board: &Board){
     let elapsed_time = now.elapsed();
 // note/print time?
 //println!("Moove took {} seconds.", elapsed_time.as_secs());
+    return Moove::new();
 }
 
 
