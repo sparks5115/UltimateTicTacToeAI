@@ -1,6 +1,6 @@
 use std::fs::read_to_string;
 use crate::{helpers};
-use crate::helpers::{is_board_won, is_two_in_row_us};
+use crate::helpers::{block_opponent, is_board_won, is_two_in_row_them, is_two_in_row_us};
 use super::TEAM_NAME;
 
 ///constant that holds our decided upon heuristic values
@@ -42,12 +42,18 @@ impl Moove { //implementation? Inside here are functions for the struct
 /// big_board number 0 takes up spaces 0-8
 /// big_board number 1 takes up spaces 9-15
 pub struct Board {
-    state: [i8;81]
+    state: [i8;81],
+    last_move: Moove,
+
 }
 impl Board {
 
     fn new() -> Board {
-        Board{state: [0; 81]}
+        Board{state: [0; 81], last_move: Moove {
+            team: "".to_string(),
+            big_board: 9,
+            small_board: 9,
+        } }
     }
 
     pub fn initialize() -> Board {
@@ -92,6 +98,7 @@ impl Board {
             symbol = 1;
         }else { symbol = -1 }
         self.state[Board::get_index(mv.big_board, mv.small_board)] =symbol;
+        self.last_move = mv;
         //self.print();
         //TODO this should call a function to write this move to the file
     }
@@ -109,7 +116,7 @@ impl Board {
         //todo all these
         h_val += HEURISTIC.board_win_loss * (self.net_boards_won(Some(big_board_state)) as i32);
         h_val += HEURISTIC.two_boards_in_row * (self.net_two_boards_in_row(Some(big_board_state)) as i32);
-        // h_val += HEURISTIC.block_opponent_board * self.net_blocked_boards();
+        h_val += HEURISTIC.block_opponent_board * (self.net_blocked_boards(Some(big_board_state)) as i32);
         // h_val += HEURISTIC.useless_board_win * self.net_useless_boards();
         // h_val += HEURISTIC.two_in_row * self.net_two_in_row();
         // h_val += HEURISTIC.block_opponent * self.net_blocked();
@@ -118,10 +125,7 @@ impl Board {
     }
 
     ///checks if the game is over, and one team has won (checks if it's a terminal node)
-    /// # Returns:
-    /// -1 if opponent has won
-    /// 1 if we have won
-    /// 0 if not won
+    /// # Returns: -1 if opponent has won, 1 if we have won, 0 if not won
     pub fn is_winning_or_losing(&self, big_board_state: Option<[i8; 9]>) -> i8{
         let bbs = match big_board_state {
             None => {self.get_big_board_state()},
@@ -132,19 +136,34 @@ impl Board {
 
     ///calculates boards won by us, minus boards won by opponent
     pub fn net_boards_won(&self, big_board_state: Option<[i8; 9]>) -> i8{
+        let bbs =self.extract_big_board_state(big_board_state);
+        bbs.iter().sum()
+    }
+
+    /// calculates how many net blocked rows/cols/diags we did - they did
+    pub fn net_blocked_boards(&self, big_board_state: Option<[i8; 9]>) -> i8 {
+        let bbs =self.extract_big_board_state(big_board_state);
+        return block_opponent(&bbs[..]);
+    }
+
+    ///used to unwrap the big board state from the option<bbs>
+    pub fn extract_big_board_state(&self, big_board_state: Option<[i8; 9]>) -> [i8; 9]{
         let bbs = match big_board_state {
             None => {self.get_big_board_state()},
             Some(a) => {a},
         };
-        bbs.iter().sum()
+        return bbs;
     }
 
-    /// calculates how many sets of 2 big boards in a row there are
+    /// calculates how many sets of 2 big boards in a row there are - how many sets of 2 for opponent
     /// TODO: Why is it when you directly return num_two_boards_in_row in the first line does it error
     pub fn net_two_boards_in_row(&self, big_board_state: Option<[i8; 9]>) -> i8 {
-        let num_two_boards_in_row = is_two_in_row_us(big_board_state: &[i8]);
+        let bbs =self.extract_big_board_state(big_board_state);
 
-        return num_two_boards_in_row;
+        let num_two_boards_in_row_us = is_two_in_row_us(&bbs[..]);
+        let num_two_boards_in_row_them = is_two_in_row_them(&bbs[..]);
+
+        return num_two_boards_in_row_us - num_two_boards_in_row_them;
     }
 
     ///checks the entire board.state and returns an array representing the board as a singular tic tac toe board.
@@ -210,16 +229,24 @@ pub struct Heuristic {
 }
 
 ///wraps a board and all the information needed to run the minimax algorithm
-pub struct TreeNode {
-    pub board: Board,
-    pub last_move: Moove,
+pub struct TreeNode<'a> {
+    pub board: &'a Board,
     pub heuristic_value: i32,
-    pub children: Vec<TreeNode>
+    pub children: Vec<TreeNode<'a>>
 }
 
-impl TreeNode{
+impl TreeNode<'_>{
+    pub fn new(board: &Board) -> TreeNode{
+        return TreeNode{
+            board,
+            heuristic_value: 0,
+            children: Vec::new(),
+        }
+    }
+
     ///builds all of this node's children (a collection of tree nodes denoting the next legal moves that could be made)
-    pub fn find_all_children(&self){
+    pub fn find_all_children(&self) -> Vec<TreeNode>{
         //TODO
+        return Vec::new();
     }
 }

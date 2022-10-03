@@ -6,7 +6,7 @@ use std::time::{Duration, Instant};
 use structs::Board;
 use crate::structs::TreeNode;
 
-               
+
 pub const TEAM_NAME:&str = "TEMP"; //TODO come up with real team name
 pub const TIME_LIMIT:u8 = 10;
 
@@ -19,7 +19,7 @@ pub fn main() {
     // go and wait for turn while the game is not won
     loop {
          //wait for groupname.go
-        
+
         // set time number (?) / record time
         let now = Instant::now();
          //check if end_game exists; if so, gameWon = true and break;
@@ -35,7 +35,7 @@ pub fn main() {
 
         loop {
             // get value at that depth
-            value = minimax(true, depth, alpha, beta, lastMove);
+            let value = minimax(true, depth, alpha, beta, TreeNode::new(&board));
 
             // give value to timer thread
 
