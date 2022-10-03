@@ -59,7 +59,7 @@ impl Board {
 
         let mut b = Board::new();
 
-        println!("Waiting for first four moves..."); // this line + next line + 5 ahead for checking if game won
+        println!("Waiting for first four moves...");
         let mut ffm_result = read_to_string(r"first_four_moves");
         while ffm_result.is_err() { //block until it finds the file
             ffm_result = read_to_string(r"first_four_moves");
