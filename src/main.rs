@@ -17,23 +17,23 @@ pub const TIME_LIMIT:Duration = Duration::from_secs(10);
 
 pub fn main() {
     // initialize board
-    let mut board = Board::initialize();
+    let board = Board::initialize();
     board.print();
     println!("{}", board.get_heuristic_value());
 
     if board.our_turn() {//it is already our turn
-        calculate_best_move(&board);
+        calculate_best_move(board);
 
     } else { // wait for turn
         let mut temp = read_to_string(TEAM_NAME.to_owned() + ".go");
         while temp.is_err() { //block until it finds the file
             temp = read_to_string(TEAM_NAME.to_owned() + ".go");
         }//once this breaks, we have found our file
-        calculate_best_move(&board);
+        calculate_best_move(board);
     }
 }
 
-pub fn calculate_best_move(board: &Board) {
+pub fn calculate_best_move(board: Board) {
     let (send_move, receive_move) = mpsc::channel::<Moove>();
     let (send_kill, receive_kill) = mpsc::channel::<bool>();
 
@@ -65,7 +65,7 @@ pub fn calculate_best_move(board: &Board) {
     });
 
     for i in  0..5{
-        send_move.send(depth_limited(board)).unwrap();
+        send_move.send(depth_limited(&board)).unwrap();
         sleep(Duration::from_secs(1));
     }
     timer_handler.join().unwrap();
@@ -85,7 +85,7 @@ pub fn depth_limited(board: &Board) -> Moove{
 
     loop {
         // get value at that depth
-        let value = minimax(true, depth, alpha, beta, TreeNode::new(board));
+        let value = minimax(true, depth, alpha, beta, TreeNode::new(board.clone()));
 
         // iterate depth
         depth += 1;

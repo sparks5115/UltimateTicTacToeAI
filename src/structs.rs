@@ -17,6 +17,7 @@ const HEURISTIC: Heuristic = Heuristic{
 };
 
 ///holds a move made by either team
+#[derive(Clone)]
 pub struct Moove {//like a cow
 pub team: String,
     pub big_board: u8,
@@ -53,6 +54,7 @@ pub fn new() -> Moove{
 ///state of the board is stored in an array as follows:
 /// big_board number 0 takes up spaces 0-8
 /// big_board number 1 takes up spaces 9-15
+#[derive(Clone)]
 pub struct Board {
     state: [i8;81],
     last_move: Moove,
@@ -87,7 +89,7 @@ impl Board {
         let mut line= String::new();
         for char in first_four_moves.chars() {
             if char == '\n' {
-                b.place_move(Moove::parse_from_string(line.clone()));//because of this clone, this can likely be done async
+                b = b.place_move(Moove::parse_from_string(line.clone()));//because of this clone, this can likely be done async
                 line = "".parse().unwrap();
             }else {
                 line.push(char);
@@ -102,21 +104,22 @@ impl Board {
     }
 
     ///Converts from notation of big_board, small_board into the index in Board's state
-    pub fn get_index(big_board: u8, small_board: u8) -> usize{
+    pub fn get_index(big_board: &u8, small_board: &u8) -> usize{
         ((big_board*9) + small_board) as usize
     }
 
     ///called on a board, places a Moove onto its own state
-    pub fn place_move(&mut self, mv:Moove){
+    pub fn place_move(&self, mv:Moove) -> Board {
         println!("Move:{} ({}, {})", mv.team, mv.big_board, mv.small_board);
-        let symbol:i8;
+        let symbol: i8;
+        // determine which symbol to place
         if mv.team.to_ascii_uppercase() == TEAM_NAME.to_ascii_uppercase() {
             symbol = 1;
-        }else { symbol = -1 }
-        self.state[Board::get_index(mv.big_board, mv.small_board)] =symbol;
-        self.last_move = mv;
-        //self.print();
-        //TODO this should call a function to write this move to the file
+        } else { symbol = -1 }
+        // create new board
+        let mut b: Board = Board { state: self.state.clone(), last_move: mv.clone() };
+        b.state[Board::get_index(&mv.big_board, &mv.small_board)] = symbol;
+        return b;
     }
 
     ///gets the heuristic of the board that it is called on
@@ -212,6 +215,12 @@ impl Board {
         &self.state[(board_number*9) as usize .. (board_number*9 + 9) as usize]
     }
 
+    pub fn clone_state(&self) -> Board{
+        //b:Board = Board::new();
+        let board_clone:Board =  Board { state: self.state, last_move: Moove::new() };
+        return board_clone;
+    }
+
     ///# for debugging purposes only
     /// prints the board
     pub fn print(&self){
@@ -251,14 +260,14 @@ pub struct Heuristic {
 }
 
 ///wraps a board and all the information needed to run the minimax algorithm
-pub struct TreeNode<'a> {
-    pub board: &'a Board,
+pub struct TreeNode {
+    pub board: Board,
     pub heuristic_value: i32,
-    pub children: Vec<TreeNode<'a>>
+    pub children: Vec<TreeNode>
 }
 
-impl TreeNode<'_>{
-    pub fn new(board: &Board) -> TreeNode{
+impl TreeNode{
+    pub fn new(board: Board) -> TreeNode{
         return TreeNode{
             board,
             heuristic_value: 0,
@@ -271,7 +280,7 @@ impl TreeNode<'_>{
         //TODO
 
         // TODO initialize Vec<TreeNode>
-        let all_children: Vec<TreeNode> = Vec::new();
+        let mut all_children: Vec<TreeNode> = Vec::new();
 
         // find the last move
         let last_move = &self.board.last_move;
@@ -286,6 +295,24 @@ impl TreeNode<'_>{
                     // go through every space in square
                     for j in 0..9 {
                         // if space is open, add TreeNode to vector
+                        if self.board.state[(i*9+j) as usize] == 0 {
+                            // calculate new team name
+                            let team_name: String;
+                            if last_move.team == TEAM_NAME {
+                                team_name = "enemy".parse().unwrap();
+                            }else{
+                                team_name = TEAM_NAME.parse().unwrap();
+                            }
+                            // create new move and add to board
+                            let new_moove = Moove {
+                                team: team_name,
+                                big_board: i,
+                                small_board: j
+                            }; // board + new node
+                            let new_node = TreeNode::new(self.board.place_move(new_moove));
+                            // push new child
+                            all_children.push(new_node);
+                        }
                         // TODO: how to test this?
                     }
                 }
