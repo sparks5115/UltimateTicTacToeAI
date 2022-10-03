@@ -36,6 +36,9 @@ impl Moove { //implementation? Inside here are functions for the struct
             small_board: v[2].chars().nth(0).expect("Invalid move_string").to_digit(10).unwrap() as u8,
         };
     }
+    pub fn to_string(&self) -> String {
+        format!("{} {} {}", self.team, self.big_board, self.small_board)
+    }
 }
 
 ///state of the board is stored in an array as follows:
