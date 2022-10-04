@@ -140,8 +140,8 @@ impl Board {
         h_val += HEURISTIC.board_win_loss * (self.net_boards_won(Some(big_board_state)) as i32);
         h_val += HEURISTIC.two_boards_in_row * (self.net_two_boards_in_row(Some(big_board_state)) as i32);
         h_val += HEURISTIC.block_opponent_board * (self.net_blocked_boards(Some(big_board_state)) as i32);
-        h_val += HEURISTIC.useless_board_win * (self.net_useless_boards(Some(board_number))as i32);
-        // h_val += HEURISTIC.two_in_row * self.net_two_in_row();
+        //h_val += HEURISTIC.useless_board_win * (self.net_useless_boards();
+        h_val += HEURISTIC.two_in_row * (self.net_two_in_row(Some(board_number))as i32);
         // h_val += HEURISTIC.block_opponent * self.net_blocked();
         // h_val += HEURISTIC.useless_move * self.net_useless();
         println!("Getting heuristic... {}", h_val);
@@ -153,15 +153,7 @@ impl Board {
         let bbs =self.extract_big_board_state(big_board_state);
         return 5;
     }
-    //calculates how many sets of 2 in a row there are - how many sets of 2 for opponent
-    pub fn two_in_row(&self, board_number: Option<[i8; 9]>) -> i8 {
-        let bs =self.get_small_board_state(board_number);
-        for n in 0..8{
-            let num_two_in_row_us = is_two_in_row_us(&bs[..]);
-            let num_two_in_row_them = is_two_in_row_them(&bs[..]);
-        }
-        return num_two_in_row_us - num_two_in_row_them;
-    }
+    
     ///checks if the game is over, and one team has won (checks if it's a terminal node)
     /// # Returns: -1 if opponent has won, 1 if we have won, 0 if not won
     pub fn is_winning_or_losing(&self, big_board_state: Option<[i8; 9]>) -> i8{
@@ -192,7 +184,15 @@ impl Board {
         };
         return bbs;
     }
-
+    //calculates how many sets of 2 in a row there are - how many sets of 2 for opponent
+    pub fn two_in_row(&self, board_number: Option<[i8; 9]>) -> i8 {
+        let bs =self.get_small_board_state(board_number);
+        for n in 0..8{
+            let num_two_in_row_us = is_two_in_row_us(&bs[..]);
+            let num_two_in_row_them = is_two_in_row_them(&bs[..]);
+        }
+        return num_two_in_row_us - num_two_in_row_them;
+    }
     /// calculates how many sets of 2 big boards in a row there are - how many sets of 2 for opponent
     /// TODO: Why is it when you directly return num_two_boards_in_row in the first line does it error
     pub fn net_two_boards_in_row(&self, big_board_state: Option<[i8; 9]>) -> i8 {
