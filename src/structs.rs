@@ -141,7 +141,7 @@ impl Board {
         let mut h_val = 0;
         let temp = self.is_winning_or_losing(Some(big_board_state)) as i32;
         if temp != 0 {
-            return temp * i32::MAX; //if the state is winning or losing, there is no need to continue
+            return temp * HEURISTIC.total_win_loss; //if the state is winning or losing, there is no need to continue
         }
 
         h_val += HEURISTIC.board_win_loss * (self.net_boards_won(Some(big_board_state)) as i32);
