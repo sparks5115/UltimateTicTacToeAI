@@ -73,7 +73,6 @@ pub fn calculate_best_move(board: Board) {
 
 pub fn depth_limited(board: &Board) -> Moove{
     // set time number (?) / record time
-    let now = Instant::now();
     //check if end_game exists; if so, gameWon = true and break;
     //if "endGame exists" { break; } //TODO make this work
 
@@ -95,7 +94,6 @@ pub fn depth_limited(board: &Board) -> Moove{
     }
 
 // write to move_file
-    let elapsed_time = now.elapsed();
 // note/print time?
 //println!("Moove took {} seconds.", elapsed_time.as_secs());
     return Moove::new();
