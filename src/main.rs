@@ -9,6 +9,7 @@ use std::thread;
 use std::thread::{current, sleep};
 use std::time::{Duration, Instant};
 use structs::Board;
+use crate::helpers::write_to_move_file;
 use crate::structs::{Moove, TreeNode};
 
 
@@ -19,44 +20,54 @@ static mut BEST_HEURISTIC: i32 = i32::MIN;
 
 pub fn main() {
     // initialize board
-    let board = Board::initialize();
+    let mut board = Board::initialize();
     board.print();
-    println!("{}", board.get_heuristic_value());
+    //println!("{}", board.get_heuristic_value());
 
-    if board.our_turn() {//it is already our turn
-        calculate_best_move(board);
+    println!("Waiting for our turn...");
+    loop {
+        let mut temp = read_to_string(TEAM_NAME.to_owned() + ".go");
+        while temp.is_err() { //block until it finds the file
+            temp = read_to_string(TEAM_NAME.to_owned() + ".go");
+        }//once this breaks, we have found our file and it is our turn
+        //let move_file_res = read_to_string("move_file");
+        let move_file_str = match read_to_string("move_file") {
+            Ok(mv) => {mv}
+            Err(_) => {panic!("HONEEEYYYY, WHERE IS MY MOVE FILE???")}
+        };
 
-    } else { // wait for turn
-        loop {
-            let mut temp = read_to_string(TEAM_NAME.to_owned() + ".go");
-            while temp.is_err() { //block until it finds the file
-                temp = read_to_string(TEAM_NAME.to_owned() + ".go");
-            }//once this breaks, we have found our file
 
-            // check if end_game file is there; if yes, break
-            if read_to_string("end_game").is_ok() {
-                break;
-            }
-
+        if move_file_str == ""{ //this is the first (technically fifth) move
             calculate_best_move(board);
+        }else{
+            board = board.place_move(Moove::parse_from_string(move_file_str));
         }
+
+
+        // check if end_game file is there; if yes, break
+        if read_to_string("end_game").is_ok() {
+            //break; TODO remove this being a comment later
+        }
+
+        calculate_best_move(board);
     }
 }
 
 pub fn calculate_best_move(board: Board) {
+    println!("in calculate best move");
     let (send_move, receive_move) = mpsc::channel::<Moove>();
-    let (send_kill, receive_kill) = mpsc::channel::<bool>();
+    let (send_kill, receive_kill) = mpsc::channel::<bool>(); //TODO KILLLLL
 
     let timer_handler = thread::spawn(move || {
         let start = Instant::now();
         let time_to_wait = Duration::from_secs(TIME_LIMIT.as_secs() - 1);//TODO give this closer time
-        println!("Timer: waiting for {} seconds", time_to_wait.as_secs());
-        let mut best_so_far: Moove;
+        //println!("Timer: waiting for {} seconds", time_to_wait.as_secs());
+        let mut best_so_far: Moove = Moove::null();
         while start.elapsed() < time_to_wait { //tries to receive new moves until it needs to submit
             match receive_move.try_recv() {
                 Ok(mv) => {
-                    println!("{}", mv.to_string());
-                    best_so_far = mv;
+                    println!("Timer: NEW BEST MOVE JUST DROPPED:::{}", mv.to_string());
+                    best_so_far = mv.clone();
                 }
                 Err(e) => {match e {
                     TryRecvError::Empty => {}
@@ -67,26 +78,34 @@ pub fn calculate_best_move(board: Board) {
                 }}
             }
         }
-        println!("Timer: sending kill message");
+        //println!("Timer: sending kill message");
         send_kill.send(true).unwrap();
 
-        println!("Timer: submitting move");
-        //TODO submit the move
+        //println!("Timer: submitting move");
+        write_to_move_file(best_so_far);
+        sleep(Duration::from_secs(1)); //todo hone this value with ref
     });
 
+    //println!("about to call depth limited");
     depth_limited(&board, send_move);
     timer_handler.join().unwrap();
 }
 
-pub fn depth_limited(board: &Board, send_move: Sender<Moove>) -> Moove{
-    let mut depth = 1;
+pub fn depth_limited(board: &Board, send_move: Sender<Moove>){
+    //println!("in depth limited");
+    let mut depth = 2;
     let alpha = i32::MIN;
     let beta = i32::MAX;
 
     loop {
-        println!("Switching to secret hyperjets! (depth {})", depth);
+        //println!("Switching to secret hyper-jets! (depth {})", depth);
+        unsafe{
+            BEST_HEURISTIC = i32::MIN;
+
+        }
+
         // get value at that depth
-        let value = minimax(true, depth, depth, alpha, beta, &mut TreeNode::new(board.clone()));
+        minimax(true, depth, depth, alpha, beta, &mut TreeNode::new(board.clone()));
         unsafe {
             send_move.send(NEXT_MOVE).unwrap();
 
@@ -94,51 +113,62 @@ pub fn depth_limited(board: &Board, send_move: Sender<Moove>) -> Moove{
         // iterate depth
         depth += 1;
 
-        break;
+        if depth == 3 {
+            break;
+        }
     }
-
-// write to move_file
-// note/print time?
-    return Moove::null();
 }
 
 
 fn minimax(maximizing_player: bool, depth: i32, total_depth: i32, mut alpha: i32, mut beta: i32, node: &mut TreeNode) -> i32 {
+    println!("in minimax, depth = {}", depth);
 
     // if depth == 0 or terminal node
     if (depth == 0) || (node.board.is_winning_or_losing(None) != 0) {
+        println!("depth == 0 or terminal node");
         node.heuristic_value = node.board.get_heuristic_value();
         return node.heuristic_value;
     }
     else if maximizing_player {
+        //println!("in maximizing player, depth = {}", depth);
+        println!("children of node:");
         let mut best_value = i32::MIN;
 
-        let best_move = Moove::null();
         // loop through child nodes
-        for mut child in &mut node.children {
-            node.heuristic_value = minimax(!maximizing_player, depth - 1, total_depth, alpha, beta, &mut child);
+        node.children = node.find_all_children();
+        //node.children.iter().nth(0).unwrap().board.print();
+        for child in node.children.iter_mut() { //for mut child in &mut node.children {
+            //println!("iterating through children in maximizing player");
+            node.heuristic_value = minimax(!maximizing_player, (depth - 1), total_depth, alpha, beta, child);
             best_value = i32::max(best_value, node.heuristic_value);
-            if total_depth-1 == depth { // if we're back to the first set of nodes (the ones we'll go to next)
-                // unsafe block oh boy welcome to the ~danger zone~
-                unsafe {
-                    if best_value > BEST_HEURISTIC {
-                        NEXT_MOVE = child.board.last_move;
-                    }
+
+            println!("Parent last move: {} {} {}", node.board.last_move.team, node.board.last_move.big_board, node.board.last_move.small_board);
+
+            // unsafe block oh boy welcome to the ~danger zone~
+            unsafe {
+                if best_value >= BEST_HEURISTIC {
+                    NEXT_MOVE = child.board.last_move;
+                    println!("best move: nextMove.team = {}", NEXT_MOVE.team);
                 }
-                // phew it's safe now you can come outside
             }
+
             alpha = max(alpha, best_value);
             if beta <= alpha { break; }
         }
 
         return best_value;
     } else {
+        println!("in not maximizing player");
         let mut best_value = i32::MAX;
 
         // loop through child nodes
+        node.children = node.find_all_children();
+        //node.children.iter().nth(0).unwrap().board.print();
         for mut child in &mut node.children {
-            node.heuristic_value = minimax(!maximizing_player, depth - 1, total_depth, alpha, beta, &mut child);
+            node.heuristic_value = minimax(!maximizing_player, (depth - 1), total_depth, alpha, beta, &mut child);
             best_value = min(best_value, node.heuristic_value);
+            //println!("Total depth: {}, Depth: {}", total_depth, depth);
+
             if beta <= alpha { break; }
         }
         return best_value;

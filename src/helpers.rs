@@ -3,6 +3,7 @@ use std::io::Write;
 use std::thread::sleep;
 use std::time;
 use crate::structs::Moove;
+use crate::TEAM_NAME;
 
 /// # Input:
 /// An array of 9 that denotes a singular, classic tic tac toe game where 1 is the player, -1 is the opponent, and 0 is an empty square
@@ -142,6 +143,6 @@ pub fn block_opponent(board_state: &[i8]) -> i8{
 pub fn write_to_move_file(moove:Moove){
     let mut f = File::create("move_file");
     f.expect("Failed to open move_file")
-        .write_all(format!("{} {} {}", moove.team, moove.big_board, moove.small_board).as_ref())
+        .write_all(format!("{} {} {}", TEAM_NAME, moove.big_board, moove.small_board).as_ref())
         .expect("Failed to write to move_file");
 }
