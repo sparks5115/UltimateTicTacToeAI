@@ -15,8 +15,8 @@ use crate::structs::{Moove, TreeNode};
 
 pub const TEAM_NAME:&str = "TEMP"; //TODO come up with real team name
 pub const TIME_LIMIT:Duration = Duration::from_secs(10);
-static mut NEXT_MOVE:Moove = Moove::null();
-static mut BEST_HEURISTIC: i32 = i32::MIN;
+//static mut NEXT_MOVE:Moove = Moove::null();
+//static mut BEST_HEURISTIC: i32 = i32::MIN;
 
 pub fn main() {
     // initialize board
@@ -97,17 +97,13 @@ pub fn depth_limited(board: &Board, send_move: Sender<Moove>){
 
     loop {
         //println!("Switching to secret hyper-jets! (depth {})", depth);
-        unsafe{
-            BEST_HEURISTIC = i32::MIN;
 
-        }
 
         // get value at that depth
         let (mv, h) = minimax(true, depth, depth, alpha, beta, &mut TreeNode::new(board.clone()));
-        unsafe {
+
             send_move.send(mv).unwrap();
 
-        }
         // iterate depth
         depth += 1;
 
@@ -118,7 +114,7 @@ pub fn depth_limited(board: &Board, send_move: Sender<Moove>){
 }
 
 
-fn minimax(maximizing_player: bool, depth: i32, total_depth: i32, mut alpha: i32, mut beta: i32, node: &mut TreeNode) -> (Moove, i32) {
+fn minimax(maximizing_player: bool, depth: i32, total_depth: i32, alpha: i32, beta: i32, node: &mut TreeNode) -> (Moove, i32) {
     println!("in minimax, depth = {}", depth);
 
     // if depth == 0 or terminal node
@@ -143,19 +139,7 @@ fn minimax(maximizing_player: bool, depth: i32, total_depth: i32, mut alpha: i32
             if best_move.1 < node.heuristic_value {
                 best_move = (child.board.last_move, node.heuristic_value)
             }
-
-            // println!("Parent last move: {} {} {}", node.board.last_move.team, node.board.last_move.big_board, node.board.last_move.small_board);
-            //
-            // // unsafe block oh boy welcome to the ~danger zone~
-            // unsafe {
-            //     if best_value >= BEST_HEURISTIC {
-            //         NEXT_MOVE = child.board.last_move;
-            //         println!("best move: nextMove.team = {}", NEXT_MOVE.team);
-            //     }
-            // }
-
-            alpha = max(alpha, best_move.1);
-            if beta <= alpha { break; }
+            if beta <= max(alpha, best_move.1) { break; }
         }
 
         return best_move;
@@ -166,7 +150,7 @@ fn minimax(maximizing_player: bool, depth: i32, total_depth: i32, mut alpha: i32
         // loop through child nodes
         node.children = node.find_all_children();
         //node.children.iter().nth(0).unwrap().board.print();
-        for mut child in &mut node.children {
+        for child in &mut node.children {
             let (_garbage, hval) = minimax(!maximizing_player, (depth - 1), total_depth, alpha, beta, child);
             node.heuristic_value = hval;
             //best_value = min(best_value, node.heuristic_value);
