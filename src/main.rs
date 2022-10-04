@@ -25,11 +25,19 @@ pub fn main() {
         calculate_best_move(board);
 
     } else { // wait for turn
-        let mut temp = read_to_string(TEAM_NAME.to_owned() + ".go");
-        while temp.is_err() { //block until it finds the file
-            temp = read_to_string(TEAM_NAME.to_owned() + ".go");
-        }//once this breaks, we have found our file
-        calculate_best_move(board);
+        loop {
+            let mut temp = read_to_string(TEAM_NAME.to_owned() + ".go");
+            while temp.is_err() { //block until it finds the file
+                temp = read_to_string(TEAM_NAME.to_owned() + ".go");
+            }//once this breaks, we have found our file
+
+            // check if end_game file is there; if yes, break
+            if read_to_string("end_game").is_ok() {
+                break;
+            }
+
+            calculate_best_move(board);
+        }
     }
 }
 
@@ -72,18 +80,13 @@ pub fn calculate_best_move(board: Board) {
 }
 
 pub fn depth_limited(board: &Board) -> Moove{
-    // set time number (?) / record time
-    //check if end_game exists; if so, gameWon = true and break;
-    //if "endGame exists" { break; } //TODO make this work
-
     let mut depth = 0;
-    let mut alpha = i32::MIN;
-    let mut beta = i32::MAX;
-    // read in move_file
+    let alpha = i32::MIN;
+    let beta = i32::MAX;
 
     loop {
         // get value at that depth
-        let value = minimax(true, depth, alpha, beta, TreeNode::new(board.clone()));
+        let value = minimax(true, depth, depth, alpha, beta, TreeNode::new(board.clone()));
 
         // iterate depth
         depth += 1;
@@ -94,34 +97,39 @@ pub fn depth_limited(board: &Board) -> Moove{
 
 // write to move_file
 // note/print time?
-    return Moove::new();
+    return Moove::null();
 }
 
 
-fn minimax(maximizing_player: bool, depth: i32, mut alpha: i32, mut beta: i32, mut node: TreeNode) -> i32 {
+fn minimax(maximizing_player: bool, depth: i32, total_depth: i32, mut alpha: i32, mut beta: i32, mut node: TreeNode) -> i32 {
 
     // if depth == 0 or terminal node
     if (depth == 0) || (node.board.is_winning_or_losing(None) != 0) {
-        //evaluate heuristic and return
+        node.heuristic_value = node.board.get_heuristic_value();
+        return node.heuristic_value;
     }
-
-    if maximizing_player {
+    else if maximizing_player {
         let mut best_value = i32::MIN;
 
+        let best_move = Moove::null();
         // loop through child nodes
         for child in node.children {
-            node.heuristic_value = minimax(!maximizing_player, depth - 1, alpha, beta, child);
+            node.heuristic_value = minimax(!maximizing_player, depth - 1, total_depth, alpha, beta, child);
             best_value = i32::max(best_value, node.heuristic_value);
+            if total_depth-1 == depth {
+
+            }
             alpha = max(alpha, best_value);
             if beta <= alpha { break; }
         }
+
         return best_value;
     } else {
         let mut best_value = i32::MAX;
 
         // loop through child nodes
         for child in node.children {
-            node.heuristic_value = minimax(!maximizing_player, depth - 1, alpha, beta, child);
+            node.heuristic_value = minimax(!maximizing_player, depth - 1, total_depth, alpha, beta, child);
             best_value = min(best_value, node.heuristic_value);
             if beta <= alpha { break; }
         }
