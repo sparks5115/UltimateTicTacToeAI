@@ -76,7 +76,6 @@ pub fn depth_limited(board: &Board) -> Moove{
     //check if end_game exists; if so, gameWon = true and break;
     //if "endGame exists" { break; } //TODO make this work
 
-    // While timer isn't done:
     let mut depth = 0;
     let mut alpha = i32::MIN;
     let mut beta = i32::MAX;
@@ -95,7 +94,6 @@ pub fn depth_limited(board: &Board) -> Moove{
 
 // write to move_file
 // note/print time?
-//println!("Moove took {} seconds.", elapsed_time.as_secs());
     return Moove::new();
 }
 
