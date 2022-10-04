@@ -12,15 +12,17 @@ use structs::Board;
 use crate::helpers::write_to_move_file;
 use crate::structs::{Moove, TreeNode};
 
+//TODO remove all prints
 
-pub const TEAM_NAME:&str = "Wombat";
+
+pub const TEAM_NAME:&str = "opp";
 pub const TIME_LIMIT:Duration = Duration::from_secs(10);
 
 pub fn main() {
     println!("Hello, my name is {}", TEAM_NAME);
     // initialize board
     let mut board = Board::initialize();
-    board.print();
+    //board.print();
     loop {
 
 
@@ -51,7 +53,7 @@ pub fn main() {
         }
         board = board.place_move(receive_best_move.recv().unwrap());
         println!("Move has been placed:");
-        board.print();
+        //board.print();
     }
 }
 
@@ -75,7 +77,7 @@ pub fn calculate_best_move(mut board: Board, send_best_move: Sender<Moove>) {
                     match e {
                         TryRecvError::Empty => {}
                         TryRecvError::Disconnected => {
-                            println!("main thread terminated the connection");
+                            println!("main thread terminated the connection"); //todo make last move not take full time
                             break; //the main thread has disconnected for some reason (possibly finished all calculations)
                         }
                     }
@@ -88,7 +90,7 @@ pub fn calculate_best_move(mut board: Board, send_best_move: Sender<Moove>) {
         println!("Timer: submitting move {}, {} {}", TEAM_NAME, best_so_far.big_board, best_so_far.small_board);
         write_to_move_file(best_so_far);
         send_best_move.send(best_so_far).unwrap();
-        sleep(Duration::from_secs(1)); //todo hone this value with ref
+        sleep(Duration::from_secs(1));
     });
 
     //println!("about to call depth limited");

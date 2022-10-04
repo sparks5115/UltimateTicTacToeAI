@@ -13,7 +13,6 @@ const HEURISTIC: Heuristic = Heuristic{
     two_in_row: 5,
     block_opponent: 20,
     useless_move: -20,
-    allow_opponent_wildcard: -75 //todo test this maybe?
 };
 
 ///holds a move made by either team
@@ -145,15 +144,14 @@ impl Board {
             return temp * i32::MAX; //if the state is winning or losing, there is no need to continue
         }
 
-        //todo all these
         h_val += HEURISTIC.board_win_loss * (self.net_boards_won(Some(big_board_state)) as i32);
         h_val += HEURISTIC.two_boards_in_row * (self.net_two_boards_in_row(Some(big_board_state)) as i32);
         h_val += HEURISTIC.block_opponent_board * (self.net_blocked_boards(Some(big_board_state)) as i32);
-        //h_val += HEURISTIC.useless_board_win * (self.net_useless_boards();
-        //h_val += HEURISTIC.two_in_row * (self.net_two_in_row(Some(board_number))as i32);
-        // h_val += HEURISTIC.block_opponent * self.net_blocked();
-        // h_val += HEURISTIC.useless_move * self.net_useless();
-        //println!("Getting heuristic... {}", h_val);
+        //h_val += HEURISTIC.useless_board_win * (self.net_useless_boards(); //todo add useless_board_win
+        h_val += HEURISTIC.two_in_row * (self.net_two_in_row() as i32);
+        h_val += HEURISTIC.block_opponent * (self.net_blocked() as i32);
+        //h_val += HEURISTIC.useless_move * self.net_useless(); //todo add useless_move
+        println!("Getting heuristic... {}", h_val);
         return h_val;
     }
 
@@ -185,6 +183,16 @@ impl Board {
         return block_opponent(&bbs[..]);
     }
 
+    /// calculates how many net blocked small boards' rows/cols/diagonals there are
+    pub fn net_blocked(&self) -> i8 {
+        let mut num_blocked = 0;
+        for i in 0..9{
+            let small = self.get_small_board_state(&(i as u8));
+            num_blocked += block_opponent(small);
+        }
+        return num_blocked;
+    }
+
     ///used to unwrap the big board state from the option<bbs>
     pub fn extract_big_board_state(&self, big_board_state: Option<[i8; 9]>) -> [i8; 9]{
         let bbs = match big_board_state {
@@ -193,17 +201,16 @@ impl Board {
         };
         return bbs;
     }
-    //calculates how many sets of 2 in a row there are - how many sets of 2 for opponent
-    // pub fn two_in_row(&self, board_number: Option<[i8; 9]>) -> i8 {
-    //     let bs =self.get_small_board_state(board_number);
-    //     for n in 0..8{
-    //         let num_two_in_row_us = is_two_in_row_us(&bs[..]);
-    //         let num_two_in_row_them = is_two_in_row_them(&bs[..]);
-    //     }
-    //     return num_two_in_row_us - num_two_in_row_them;
-    //}
+    ///calculates how many sets of 2 in a row there are - how many sets of 2 for opponent
+    pub fn net_two_in_row(&self) -> i8 {
+        let mut num_two_in_row = 0;
+        for i in 0..9{
+            let small = self.get_small_board_state(&(i as u8));
+            num_two_in_row += is_two_in_row_us(small) - is_two_in_row_them(small);
+        }
+        return num_two_in_row;
+    }
     /// calculates how many sets of 2 big boards in a row there are - how many sets of 2 for opponent
-    /// TODO: Why is it when you directly return num_two_boards_in_row in the first line does it error
     pub fn net_two_boards_in_row(&self, big_board_state: Option<[i8; 9]>) -> i8 {
         let bbs =self.extract_big_board_state(big_board_state);
 
@@ -267,7 +274,6 @@ impl Board {
     }
 }
 
-//TODO could likely change all of the heuristic stuff to i16 for space
 /// just an easy way to encompass our heuristic in one place
 pub struct Heuristic {
     total_win_loss: i32, //game win or loss: three big boards in a row
@@ -278,7 +284,6 @@ pub struct Heuristic {
     two_in_row: i32, //two in a row on small board
     block_opponent: i32, //block on small board
     useless_move: i32, //blocked move on small board
-    allow_opponent_wildcard: i32 //send opponent to won/full board, allowing them to move anywhere
 }
 
 ///wraps a board and all the information needed to run the minimax algorithm
