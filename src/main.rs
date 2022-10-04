@@ -36,20 +36,18 @@ pub fn main() {
             Err(_) => {panic!("HONEEEYYYY, WHERE IS MY MOVE FILE???")}
         };
 
-
-        if move_file_str == ""{ //this is the first (technically fifth) move
-            calculate_best_move(board);
-        }else{
-            board = board.place_move(Moove::parse_from_string(move_file_str));
-        }
-
-
         // check if end_game file is there; if yes, break
         if read_to_string("end_game").is_ok() {
             //break; TODO remove this being a comment later
         }
 
-        calculate_best_move(board);
+        if move_file_str == ""{ //this is the first (technically fifth) move
+            calculate_best_move(board);
+        }else{
+            board = board.place_move(Moove::parse_from_string(move_file_str));
+            calculate_best_move(board);
+        }
+        break; //todo
     }
 }
 
@@ -105,73 +103,82 @@ pub fn depth_limited(board: &Board, send_move: Sender<Moove>){
         }
 
         // get value at that depth
-        minimax(true, depth, depth, alpha, beta, &mut TreeNode::new(board.clone()));
+        let (mv, h) = minimax(true, depth, depth, alpha, beta, &mut TreeNode::new(board.clone()));
         unsafe {
-            send_move.send(NEXT_MOVE).unwrap();
+            send_move.send(mv).unwrap();
 
         }
         // iterate depth
         depth += 1;
 
-        if depth == 3 {
+        if depth >= 10 {
             break;
         }
     }
 }
 
 
-fn minimax(maximizing_player: bool, depth: i32, total_depth: i32, mut alpha: i32, mut beta: i32, node: &mut TreeNode) -> i32 {
+fn minimax(maximizing_player: bool, depth: i32, total_depth: i32, mut alpha: i32, mut beta: i32, node: &mut TreeNode) -> (Moove, i32) {
     println!("in minimax, depth = {}", depth);
 
     // if depth == 0 or terminal node
     if (depth == 0) || (node.board.is_winning_or_losing(None) != 0) {
         println!("depth == 0 or terminal node");
         node.heuristic_value = node.board.get_heuristic_value();
-        return node.heuristic_value;
+        return (node.board.last_move, node.heuristic_value);
     }
     else if maximizing_player {
         //println!("in maximizing player, depth = {}", depth);
         println!("children of node:");
-        let mut best_value = i32::MIN;
+        let mut best_move = (Moove::null(), i32::MIN);
 
         // loop through child nodes
         node.children = node.find_all_children();
         //node.children.iter().nth(0).unwrap().board.print();
         for child in node.children.iter_mut() { //for mut child in &mut node.children {
             //println!("iterating through children in maximizing player");
-            node.heuristic_value = minimax(!maximizing_player, (depth - 1), total_depth, alpha, beta, child);
-            best_value = i32::max(best_value, node.heuristic_value);
-
-            println!("Parent last move: {} {} {}", node.board.last_move.team, node.board.last_move.big_board, node.board.last_move.small_board);
-
-            // unsafe block oh boy welcome to the ~danger zone~
-            unsafe {
-                if best_value >= BEST_HEURISTIC {
-                    NEXT_MOVE = child.board.last_move;
-                    println!("best move: nextMove.team = {}", NEXT_MOVE.team);
-                }
+            let (_last_move, hval) = minimax(!maximizing_player, (depth - 1), total_depth, alpha, beta, child);
+            node.heuristic_value = hval;
+            //best_value = i32::max(best_move, node.heuristic_value);
+            if best_move.1 < node.heuristic_value {
+                best_move = (child.board.last_move, node.heuristic_value)
             }
 
-            alpha = max(alpha, best_value);
+            // println!("Parent last move: {} {} {}", node.board.last_move.team, node.board.last_move.big_board, node.board.last_move.small_board);
+            //
+            // // unsafe block oh boy welcome to the ~danger zone~
+            // unsafe {
+            //     if best_value >= BEST_HEURISTIC {
+            //         NEXT_MOVE = child.board.last_move;
+            //         println!("best move: nextMove.team = {}", NEXT_MOVE.team);
+            //     }
+            // }
+
+            alpha = max(alpha, best_move.1);
             if beta <= alpha { break; }
         }
 
-        return best_value;
+        return best_move;
     } else {
         println!("in not maximizing player");
-        let mut best_value = i32::MAX;
+        let mut best_move = (Moove::null(), i32::MAX);
 
         // loop through child nodes
         node.children = node.find_all_children();
         //node.children.iter().nth(0).unwrap().board.print();
         for mut child in &mut node.children {
-            node.heuristic_value = minimax(!maximizing_player, (depth - 1), total_depth, alpha, beta, &mut child);
-            best_value = min(best_value, node.heuristic_value);
+            let (_garbage, hval) = minimax(!maximizing_player, (depth - 1), total_depth, alpha, beta, child);
+            node.heuristic_value = hval;
+            //best_value = min(best_value, node.heuristic_value);
+            if best_move.1 > node.heuristic_value {
+                best_move = (child.board.last_move, node.heuristic_value)
+            }
+
             //println!("Total depth: {}, Depth: {}", total_depth, depth);
 
             if beta <= alpha { break; }
         }
-        return best_value;
+        return best_move;
     }
 
 }
