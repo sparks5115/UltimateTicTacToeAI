@@ -195,7 +195,7 @@ impl Board {
     ///  (if you ignore that the individual games are games and treat them as their results, it treats the big board as a simple tic tac toe game)
     pub fn get_big_board_state(&self) -> [i8; 9]{
         let mut big_board: [i8; 9] = [0 as i8; 9];
-        for i in 0..8 {
+        for i in 0..9 {
             big_board[i] = self.board_is_won( &(i as u8));
         }
         return big_board;
