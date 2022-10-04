@@ -15,7 +15,7 @@ use crate::structs::{Moove, TreeNode};
 //TODO remove all prints
 
 
-pub const TEAM_NAME:&str = "wombat";
+pub const TEAM_NAME:&str = "opp";
 pub const TIME_LIMIT:Duration = Duration::from_secs(10);
 
 pub fn main() {
@@ -109,7 +109,7 @@ pub fn depth_limited(board: &Board, send_move: Sender<Moove>, receive_kill: Rece
 
 
         // get value at that depth
-        //println!("Calling Minimax with depth {}", depth);
+        println!("Calling Minimax with depth {}", depth);
         let (mv, h) = minimax(true, depth, alpha, beta, &mut TreeNode::new(board.clone()), &receive_kill);
         if h == -1 { //minimax returned due to the kill message
             break;
@@ -122,8 +122,7 @@ pub fn depth_limited(board: &Board, send_move: Sender<Moove>, receive_kill: Rece
 }
 
 
-fn minimax(maximizing_player: bool, depth: i32, alpha: i32, beta: i32, node: &mut TreeNode, receive_kill: &Receiver<bool>) -> (Moove, i32) {
-    //println!("in minimax, depth = {}", depth);
+fn minimax(maximizing_player: bool, depth: i32, mut alpha: i32, mut beta: i32, node: &mut TreeNode, receive_kill: &Receiver<bool>) -> (Moove, i32) {
 
     if receive_kill.try_recv().is_ok() {
         return  (Moove::null(), -1) //this means that we want to kill the recursion
@@ -135,37 +134,42 @@ fn minimax(maximizing_player: bool, depth: i32, alpha: i32, beta: i32, node: &mu
         return (node.board.last_move, node.heuristic_value);
     }
     else if maximizing_player {
-        //println!("in maximizing player, depth = {}", depth);
-        //println!("children of node:");
+        let mut max_eva = i32::MIN;
         let mut best_move = (Moove::null(), i32::MIN);
 
         // loop through child nodes
         node.children = node.find_all_children();
-        //node.children.iter().nth(0).unwrap().board.print();
         for child in node.children.iter_mut() { //for mut child in &mut node.children {
-            //println!("iterating through children in maximizing player");
             let (_last_move, hval) = minimax(!maximizing_player, (depth - 1), alpha, beta, child, receive_kill);
             if hval == -1{
                 return  (_last_move, hval) //this means that we want to kill the recursion
             }
             node.heuristic_value = hval;
-            //best_value = i32::max(best_move, node.heuristic_value);
             if best_move.1 < node.heuristic_value {
                 best_move = (child.board.last_move, node.heuristic_value)
             }
-            if beta <= max(alpha, best_move.1) { break; }
+
+            max_eva = max(max_eva, hval);
+            alpha = max(alpha, max_eva);
+            //beta = hval;
+
+            if beta <= alpha {
+                break;
+            }
+
         }
 
         return best_move;
     } else {
         //println!("in not maximizing player");
+        let mut min_eva = i32::MAX;
         let mut best_move = (Moove::null(), i32::MAX);
 
         // loop through child nodes
         node.children = node.find_all_children();
         //node.children.iter().nth(0).unwrap().board.print();
         for child in &mut node.children {
-            let (_last_move, hval) = minimax(!maximizing_player, (depth - 1), alpha, beta, child, receive_kill);
+            let (_last_move, hval) = minimax(!maximizing_player, (depth - 1), alpha, beta, child, receive_kill); ;
             if hval == -1{
                 return  (_last_move, hval) //this means that we want to kill the recursion
             }
@@ -175,9 +179,17 @@ fn minimax(maximizing_player: bool, depth: i32, alpha: i32, beta: i32, node: &mu
                 best_move = (child.board.last_move, node.heuristic_value)
             }
 
+            min_eva = min(min_eva, hval);
+            beta = min(beta, hval);
+            //alpha = hval;
+
+            if beta <= alpha {
+                break;
+            }
+
             //println!("Total depth: {}, Depth: {}", total_depth, depth);
 
-            if beta <= alpha { break; }
+            //if beta <= alpha { break; }
         }
         return best_move;
     }
