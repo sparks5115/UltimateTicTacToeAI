@@ -277,9 +277,7 @@ impl TreeNode{
 
     ///builds all of this node's children (a collection of tree nodes denoting the next legal moves that could be made)
     pub fn find_all_children(&self) -> Vec<TreeNode>{
-        //TODO
-
-        // TODO initialize Vec<TreeNode>
+        // initialize all children vector
         let mut all_children: Vec<TreeNode> = Vec::new();
 
         // find the last move
@@ -313,7 +311,6 @@ impl TreeNode{
                             // push new child
                             all_children.push(new_node);
                         }
-                        // TODO: how to test this?
                     }
                 }
 
@@ -322,8 +319,6 @@ impl TreeNode{
         else {
             // go through every space in square
             for i in 0..9 {
-                // if space is open, add TreeNode to vector
-                // TODO: just like above; how to do this
                 // if space is open, add TreeNode to vector
                 if self.board.state[(next_board*9+i) as usize] == 0 {
                     // calculate new team name
