@@ -324,9 +324,28 @@ impl TreeNode{
             for i in 0..9 {
                 // if space is open, add TreeNode to vector
                 // TODO: just like above; how to do this
+                // if space is open, add TreeNode to vector
+                if self.board.state[(next_board*9+i) as usize] == 0 {
+                    // calculate new team name
+                    let team_name: String;
+                    if last_move.team == TEAM_NAME {
+                        team_name = "enemy".parse().unwrap();
+                    }else{
+                        team_name = TEAM_NAME.parse().unwrap();
+                    }
+                    // create new move and add to board
+                    let new_moove = Moove {
+                        team: team_name,
+                        big_board: *next_board,
+                        small_board: i
+                    }; // board + new node
+                    let new_node = TreeNode::new(self.board.place_move(new_moove));
+                    // push new child
+                    all_children.push(new_node);
+                }
             }
         }
 
-        return Vec::new(); // TODO: change to the vector initialized at the beginning
+        return all_children; // TODO: change to the vector initialized at the beginning
     }
 }
