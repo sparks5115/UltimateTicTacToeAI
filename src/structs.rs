@@ -24,14 +24,14 @@ pub struct Moove {//like a cow
     pub small_board: u8,
 }
 impl Moove { //implementation? Inside here are functions for the struct
-pub fn null() -> Moove{
+pub const fn null() -> Moove{
     return Moove{
         team: 66,
         big_board: 9,
         small_board: 9
     }
-}
 
+}
 
     ///parses a string (such as the one in move_file) into a Moove struct
     /// # Examples:
@@ -70,7 +70,7 @@ pub fn null() -> Moove{
 #[derive(Copy, Clone)]
 pub struct Board {
     state: [i8;81],
-    last_move: Moove,
+    pub(crate) last_move: Moove,
 }
 impl Board {
 

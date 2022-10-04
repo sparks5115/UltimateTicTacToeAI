@@ -4,7 +4,7 @@ mod helpers;
 use std::fs::read_to_string;
 use std::cmp::{max, min};
 use std::sync::mpsc;
-use std::sync::mpsc::TryRecvError;
+use std::sync::mpsc::{Sender, TryRecvError};
 use std::thread;
 use std::thread::{current, sleep};
 use std::time::{Duration, Instant};
@@ -14,6 +14,8 @@ use crate::structs::{Moove, TreeNode};
 
 pub const TEAM_NAME:&str = "TEMP"; //TODO come up with real team name
 pub const TIME_LIMIT:Duration = Duration::from_secs(10);
+static mut NEXT_MOVE:Moove = Moove::null();
+static mut BEST_HEURISTIC: i32 = i32::MIN;
 
 pub fn main() {
     // initialize board
@@ -72,26 +74,26 @@ pub fn calculate_best_move(board: Board) {
         //TODO submit the move
     });
 
-    for i in  0..5{
-        send_move.send(depth_limited(&board)).unwrap();
-        sleep(Duration::from_secs(1));
-    }
+    depth_limited(&board, send_move);
     timer_handler.join().unwrap();
 }
 
-pub fn depth_limited(board: &Board) -> Moove{
-    let mut depth = 0;
+pub fn depth_limited(board: &Board, send_move: Sender<Moove>) -> Moove{
+    let mut depth = 1;
     let alpha = i32::MIN;
     let beta = i32::MAX;
 
     loop {
+        println!("Switching to secret hyperjets! (depth {})", depth);
         // get value at that depth
-        let value = minimax(true, depth, depth, alpha, beta, TreeNode::new(board.clone()));
+        let value = minimax(true, depth, depth, alpha, beta, &mut TreeNode::new(board.clone()));
+        unsafe {
+            send_move.send(NEXT_MOVE).unwrap();
 
+        }
         // iterate depth
         depth += 1;
 
-        // if timer thread = finished (read a message sent by the thread?)
         break;
     }
 
@@ -101,7 +103,7 @@ pub fn depth_limited(board: &Board) -> Moove{
 }
 
 
-fn minimax(maximizing_player: bool, depth: i32, total_depth: i32, mut alpha: i32, mut beta: i32, mut node: TreeNode) -> i32 {
+fn minimax(maximizing_player: bool, depth: i32, total_depth: i32, mut alpha: i32, mut beta: i32, node: &mut TreeNode) -> i32 {
 
     // if depth == 0 or terminal node
     if (depth == 0) || (node.board.is_winning_or_losing(None) != 0) {
@@ -113,11 +115,17 @@ fn minimax(maximizing_player: bool, depth: i32, total_depth: i32, mut alpha: i32
 
         let best_move = Moove::null();
         // loop through child nodes
-        for child in node.children {
-            node.heuristic_value = minimax(!maximizing_player, depth - 1, total_depth, alpha, beta, child);
+        for mut child in &mut node.children {
+            node.heuristic_value = minimax(!maximizing_player, depth - 1, total_depth, alpha, beta, &mut child);
             best_value = i32::max(best_value, node.heuristic_value);
-            if total_depth-1 == depth {
-
+            if total_depth-1 == depth { // if we're back to the first set of nodes (the ones we'll go to next)
+                // unsafe block oh boy welcome to the ~danger zone~
+                unsafe {
+                    if best_value > BEST_HEURISTIC {
+                        NEXT_MOVE = child.board.last_move;
+                    }
+                }
+                // phew it's safe now you can come outside
             }
             alpha = max(alpha, best_value);
             if beta <= alpha { break; }
@@ -128,8 +136,8 @@ fn minimax(maximizing_player: bool, depth: i32, total_depth: i32, mut alpha: i32
         let mut best_value = i32::MAX;
 
         // loop through child nodes
-        for child in node.children {
-            node.heuristic_value = minimax(!maximizing_player, depth - 1, total_depth, alpha, beta, child);
+        for mut child in &mut node.children {
+            node.heuristic_value = minimax(!maximizing_player, depth - 1, total_depth, alpha, beta, &mut child);
             best_value = min(best_value, node.heuristic_value);
             if beta <= alpha { break; }
         }
