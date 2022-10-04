@@ -84,8 +84,17 @@ impl Board {
 
         println!("Waiting for first four moves...");
         let mut ffm_result = read_to_string(r"first_four_moves");
-        while ffm_result.is_err() { //block until it finds the file
-            ffm_result = read_to_string(r"first_four_moves");
+        loop{
+            while ffm_result.is_err() || ffm_result.as_ref().unwrap().is_empty() { //block until it finds the file
+                ffm_result = read_to_string(r"first_four_moves");
+            }
+            let mut new_line_chars = 0;
+            for char in ffm_result.as_ref().unwrap().chars(){
+                if char == '\n'{
+                    new_line_chars += 1;
+                }
+            }
+            if new_line_chars >= 3 {break;}
         }
         let mut first_four_moves: String = ffm_result.expect("wohoo"); // becuase you wait until there is not an error teachnically this isn't needed, but it'll freak anyways
 

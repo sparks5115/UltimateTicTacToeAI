@@ -13,43 +13,50 @@ use crate::helpers::write_to_move_file;
 use crate::structs::{Moove, TreeNode};
 
 
-pub const TEAM_NAME:&str = "TEMP"; //TODO come up with real team name
+pub const TEAM_NAME:&str = "Wombat";
 pub const TIME_LIMIT:Duration = Duration::from_secs(10);
 
 pub fn main() {
+    println!("Hello, my name is {}", TEAM_NAME);
     // initialize board
     let mut board = Board::initialize();
     board.print();
-
-    println!("Waiting for our turn...");
     loop {
+
+
+        println!("Waiting for our turn...");
+
         let mut temp = read_to_string(TEAM_NAME.to_owned() + ".go");
         while temp.is_err() { //block until it finds the file
             temp = read_to_string(TEAM_NAME.to_owned() + ".go");
         }//once this breaks, we have found our file and it is our turn
+        println!("found {}.go", TEAM_NAME);
+
+        if read_to_string("end_game").is_ok() {
+            println!("GAME OVER");
+            break;
+        }
         //let move_file_res = read_to_string("move_file");
         let move_file_str = match read_to_string("move_file") {
-            Ok(mv) => {mv}
-            Err(_) => {panic!("HONEEEYYYY, WHERE IS MY MOVE FILE???")}
+            Ok(mv) => { mv }
+            Err(_) => { panic!("HONEEEYYYY, WHERE IS MY MOVE FILE???") }
         };
 
-        // check if end_game file is there; if yes, break
-        if read_to_string("end_game").is_ok() {
-            //break; TODO remove this being a comment later
-        }
-
-        if move_file_str == ""{ //this is the first (technically fifth) move
-            calculate_best_move(board);
-        }else{
+        let (send_best_move, receive_best_move) = mpsc::channel::<Moove>();
+        if move_file_str == "" { //this is the first (technically fifth) move
+            calculate_best_move(board, send_best_move);
+        } else {
             board = board.place_move(Moove::parse_from_string(move_file_str));
-            calculate_best_move(board);
+            calculate_best_move(board, send_best_move);
         }
-        break; //todo
+        board = board.place_move(receive_best_move.recv().unwrap());
+        println!("Move has been placed:");
+        board.print();
     }
 }
 
-pub fn calculate_best_move(board: Board) {
-    println!("in calculate best move");
+pub fn calculate_best_move(mut board: Board, send_best_move: Sender<Moove>) {
+    //println!("in calculate best move");
     let (send_move, receive_move) = mpsc::channel::<Moove>();
     let (send_kill, receive_kill) = mpsc::channel::<bool>();
 
@@ -61,7 +68,7 @@ pub fn calculate_best_move(board: Board) {
         while start.elapsed() < time_to_wait { //tries to receive new moves until it needs to submit
             match receive_move.try_recv() {
                 Ok(mv) => {
-                    println!("Timer: NEW BEST MOVE JUST DROPPED:::{}", mv.to_string());
+                    //println!("Timer: NEW BEST MOVE JUST DROPPED:::{}", mv.to_string());
                     best_so_far = mv.clone();
                 }
                 Err(e) => {
@@ -75,11 +82,12 @@ pub fn calculate_best_move(board: Board) {
                 }
             }
         }
-        println!("Timer: sending kill message");
+        //println!("Timer: sending kill message");
         send_kill.send(true).unwrap();
 
-        //println!("Timer: submitting move");
+        println!("Timer: submitting move {}, {} {}", TEAM_NAME, best_so_far.big_board, best_so_far.small_board);
         write_to_move_file(best_so_far);
+        send_best_move.send(best_so_far).unwrap();
         sleep(Duration::from_secs(1)); //todo hone this value with ref
     });
 
@@ -95,7 +103,7 @@ pub fn depth_limited(board: &Board, send_move: Sender<Moove>, receive_kill: Rece
     let beta = i32::MAX;
 
     loop {
-        println!("Switching to secret hyper-jets! (depth {})", depth);
+        //println!("Switching to secret hyper-jets! (depth {})", depth);
 
 
         // get value at that depth
