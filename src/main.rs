@@ -35,7 +35,8 @@ pub fn main() {
         println!("found {}.go", TEAM_NAME);
 
         if read_to_string("end_game").is_ok() {
-            println!("GAME OVER");
+            sleep(Duration::from_millis(100));
+            println!("{}", read_to_string("end_game").expect("please dont panic now"));
             break;
         }
         //let move_file_res = read_to_string("move_file");

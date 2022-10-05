@@ -1,5 +1,10 @@
 # Group members: Sam Parks, Sidney Goldinger, Rusen Emre Sabaz
 
+## Contributions:
+    Sam: Provided the structure and background code for the agent, as well as handling state. Handled communication internally and with the referee. Helped with bugfixing.
+    Sid: Coded the minimax algorithm and alpha/beta. Helped with bugfixing.
+    Rusen: Found and helped code the heuristics.
+
 # IMPORTANT:
 this program is named "wombat" for communication with the referee (and this should be the arg that it takes in)
 
