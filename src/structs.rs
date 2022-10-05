@@ -151,7 +151,7 @@ impl Board {
         h_val += HEURISTIC.two_in_row * (self.net_two_in_row() as i32);
         h_val += HEURISTIC.block_opponent * (self.net_blocked() as i32);
         //h_val += HEURISTIC.useless_move * self.net_useless(); //todo add useless_move
-        println!("Getting heuristic... {}", h_val);
+        //println!("Getting heuristic... {}", h_val);
         return h_val;
     }
 

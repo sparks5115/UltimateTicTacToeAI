@@ -32,7 +32,6 @@ pub fn main() {
         while temp.is_err() { //block until it finds the file
             temp = read_to_string(TEAM_NAME.to_owned() + ".go");
         }//once this breaks, we have found our file and it is our turn
-        println!("found {}.go", TEAM_NAME);
 
         if read_to_string("end_game").is_ok() {
             sleep(Duration::from_millis(100));
@@ -53,25 +52,20 @@ pub fn main() {
             calculate_best_move(board, send_best_move);
         }
         board = board.place_move(receive_best_move.recv().unwrap());
-        println!("Move has been placed:");
-        //board.print();
     }
 }
 
 pub fn calculate_best_move(mut board: Board, send_best_move: Sender<Moove>) {
-    //println!("in calculate best move");
     let (send_move, receive_move) = mpsc::channel::<Moove>();
     let (send_kill, receive_kill) = mpsc::channel::<bool>();
 
     let timer_handler = thread::spawn(move || {
         let start = Instant::now();
         let time_to_wait = Duration::from_millis((TIME_LIMIT.as_millis() - 500) as u64);
-        //println!("Timer: waiting for {} seconds", time_to_wait.as_secs());
         let mut best_so_far: Moove = Moove::null();
         while start.elapsed() < time_to_wait { //tries to receive new moves until it needs to submit
             match receive_move.try_recv() {
                 Ok(mv) => {
-                    //println!("Timer: NEW BEST MOVE JUST DROPPED:::{}", mv.to_string());
                     best_so_far = mv.clone();
                 }
                 Err(e) => {
@@ -85,7 +79,6 @@ pub fn calculate_best_move(mut board: Board, send_best_move: Sender<Moove>) {
                 }
             }
         }
-        //println!("Timer: sending kill message");
         send_kill.send(true).unwrap();
 
         println!("Timer: submitting move {}, {} {}", TEAM_NAME, best_so_far.big_board, best_so_far.small_board);
@@ -94,23 +87,20 @@ pub fn calculate_best_move(mut board: Board, send_best_move: Sender<Moove>) {
         sleep(Duration::from_secs(1));
     });
 
-    //println!("about to call depth limited");
     depth_limited(&board, send_move, receive_kill);
     timer_handler.join().unwrap();
 }
 
 pub fn depth_limited(board: &Board, send_move: Sender<Moove>, receive_kill: Receiver<bool>){
-    //println!("in depth limited");
     let mut depth = 2;
     let alpha = i32::MIN;
     let beta = i32::MAX;
 
     loop {
-        //println!("Switching to secret hyper-jets! (depth {})", depth);
+        println!("Switching to secret hyper-jets! (depth {})", depth);
 
 
         // get value at that depth
-        println!("Calling Minimax with depth {}", depth);
         let (mv, h) = minimax(true, depth, alpha, beta, &mut TreeNode::new(board.clone()), &receive_kill);
         if h == -1 { //minimax returned due to the kill message
             break;
@@ -130,7 +120,6 @@ fn minimax(maximizing_player: bool, depth: i32, mut alpha: i32, mut beta: i32, n
     }
     // if depth == 0 or terminal node
     if (depth == 0) || (node.board.is_winning_or_losing(None) != 0) {
-        //println!("depth == 0 or terminal node");
         node.heuristic_value = node.board.get_heuristic_value();
         return (node.board.last_move, node.heuristic_value);
     }
@@ -162,13 +151,11 @@ fn minimax(maximizing_player: bool, depth: i32, mut alpha: i32, mut beta: i32, n
 
         return best_move;
     } else {
-        //println!("in not maximizing player");
         let mut min_eva = i32::MAX;
         let mut best_move = (Moove::null(), i32::MAX);
 
         // loop through child nodes
         node.children = node.find_all_children();
-        //node.children.iter().nth(0).unwrap().board.print();
         for child in &mut node.children {
             let (_last_move, hval) = minimax(!maximizing_player, (depth - 1), alpha, beta, child, receive_kill); ;
             if hval == -1{
@@ -188,7 +175,6 @@ fn minimax(maximizing_player: bool, depth: i32, mut alpha: i32, mut beta: i32, n
                 break;
             }
 
-            //println!("Total depth: {}, Depth: {}", total_depth, depth);
 
             //if beta <= alpha { break; }
         }
