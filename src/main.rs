@@ -59,7 +59,7 @@ pub fn calculate_best_move(mut board: Board, send_best_move: Sender<Moove>) {
 
     let timer_handler = thread::spawn(move || {
         let start = Instant::now();
-        let time_to_wait = Duration::from_millis((TIME_LIMIT.as_millis() - 500) as u64);
+        let time_to_wait = Duration::from_millis((TIME_LIMIT.as_millis() - 115) as u64);
         let mut best_so_far: Moove = Moove::null();
         while start.elapsed() < time_to_wait { //tries to receive new moves until it needs to submit
             match receive_move.try_recv() {
