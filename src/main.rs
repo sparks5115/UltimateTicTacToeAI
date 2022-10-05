@@ -12,8 +12,6 @@ use structs::Board;
 use crate::helpers::write_to_move_file;
 use crate::structs::{Moove, TreeNode};
 
-//TODO remove all prints
-
 
 pub const TEAM_NAME:&str = "wombat";
 pub const TIME_LIMIT:Duration = Duration::from_secs(10);
