@@ -1,8 +1,17 @@
 # Group members: Sam Parks, Sidney Goldinger, Rusen Emre Sabaz
 
+# IMPORTANT:
+this program is named "wombat" for communication with the referee (and this should be the arg that it takes in)
+
 # how to build executable:
 if not already installed, install rust (https://www.rust-lang.org/tools/install)
-from project root(wombat/) run command "cargo build" to generate a binary or "cargo run" to build and run\
+We used the most recent version of rustc to compile this (rustc 1.63.0 (4b91a6ea7 2022-08-08))
+from project root(wombat/) run command "cargo build" to generate a binary or "cargo run" to build and run
+alternatively, I think you can use "rustc <path>/src/main.rs" to compile, this should have the same result (although i am not sure as this is not the method that I used)
+
+This was compiled from ubuntu:
+kernel: 5.15.0-48-generic
+OS: Ubuntu 22.04.1 LTS
 
 # utility function:
 Returns a heuristic of i32::MAX if the player is winning in the terminal state
