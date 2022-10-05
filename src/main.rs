@@ -15,7 +15,7 @@ use crate::structs::{Moove, TreeNode};
 //TODO remove all prints
 
 
-pub const TEAM_NAME:&str = "opp";
+pub const TEAM_NAME:&str = "wombat";
 pub const TIME_LIMIT:Duration = Duration::from_secs(10);
 
 pub fn main() {
