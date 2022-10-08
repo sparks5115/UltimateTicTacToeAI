@@ -147,19 +147,71 @@ impl Board {
         h_val += HEURISTIC.board_win_loss * (self.net_boards_won(Some(big_board_state)) as i32);
         h_val += HEURISTIC.two_boards_in_row * (self.net_two_boards_in_row(Some(big_board_state)) as i32);
         h_val += HEURISTIC.block_opponent_board * (self.net_blocked_boards(Some(big_board_state)) as i32);
-        //h_val += HEURISTIC.useless_board_win * (self.net_useless_boards(); //todo add useless_board_win
+        h_val += HEURISTIC.useless_board_win * (self.net_useless_boards(Some(big_board_state)) as i32);
         h_val += HEURISTIC.two_in_row * (self.net_two_in_row() as i32);
         h_val += HEURISTIC.block_opponent * (self.net_blocked() as i32);
-        //h_val += HEURISTIC.useless_move * self.net_useless(); //todo add useless_move
+        h_val += HEURISTIC.useless_move * (self.net_useless_move() as i32);
         //println!("Getting heuristic... {}", h_val);
         return h_val;
+    }
+
+    pub fn net_useless_move(&self) -> i8{
+        let mut net = 0;
+        for i in 0..9{
+            net += self.net_useless_boards(Some(self.get_small_board_state(&i).try_into().unwrap()));
+        }
+        return net;
     }
 
     /// calculates number of boards blocked in all directions for us - them
     pub fn net_useless_boards(&self, big_board_state: Option<[i8; 9]>) -> i8{
         let bbs =self.extract_big_board_state(big_board_state);
-        return 5;
+        let mut net:i8 = 0;
+
+        //i dont know a better way to do this than the really dumb way
+        //if bbs[odd] then it will not be in the diagonal
+        for i in 0..9{
+            let mut row_blocked:bool = false;
+            let mut col_blocked:bool = false;
+            let mut diag_blocked:bool = false;
+            if bbs[i] != 0{ //there is a mark in square i
+                let t = bbs[i]; //team
+                let ot = t*-1; //other team
+                //check row (remember row = i/3, col = i%3)
+                // To check a row, one must not know the row, only what is in the other two columns in the same row
+                row_blocked = match i%3 {
+                    0 => {bbs[i+1] == ot || bbs[i+2] == ot}, //left column
+                    1 => {bbs[i-1] == ot || bbs[i+1] == ot}, //middle column
+                    2 => {bbs[i-2] == ot || bbs[i-1] == ot}, //right column
+                    _ => {panic!("modulus doesnt work");}
+                };
+                if row_blocked { //if the row is not blocked, then there is no need to check this, as the square is not blocked... this is just for speed
+                    //check row (remember row = i/3, col = i%3)
+                    //To check a col, one must not know the col, only what is in the other two rows in the same col
+                    col_blocked = match i/3 {
+                        0 => {bbs[i+3] == ot || bbs[i+6] == ot},//top row
+                        1 => {bbs[i-3] == ot || bbs[i+3] == ot}, //mid row
+                        2 => {bbs[i-6] == ot || bbs[i-3] == ot}, //bottom row
+                        _ => {panic!("array is too long or smth");}
+                    };
+                }
+                if row_blocked && col_blocked && i%2 == 0{ //saves time, and checks if the square is in a diagonal
+                    diag_blocked =
+                        i==0 && (bbs[4]==ot || bbs[8]==ot) ||
+                        i==2 && (bbs[4]==ot || bbs[6]==ot) ||
+                        i==4 && ((bbs[0]==ot || bbs[8]==ot)&&(bbs[2]==ot || bbs[6]==ot)) ||
+                        i==6 && (bbs[2]==ot || bbs[4]==ot) ||
+                        i==8 && (bbs[0]==ot || bbs[4]==ot)
+                }
+
+                if row_blocked && col_blocked && (diag_blocked || i%2 == 1){
+                    net += t; //plus 1 if us, -1 if other team
+                }
+            }
+        }
+        return net;
     }
+
     
     ///checks if the game is over, and one team has won (checks if it's a terminal node)
     /// # Returns: -1 if opponent has won, 1 if we have won, 0 if not won
@@ -271,6 +323,19 @@ impl Board {
                 println!();
             }println!("-------------------------------------");
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::Board;
+
+    #[test]
+    fn it_works() {
+        let result = 2 + 2;
+        let bs:[i8;9] = [0,0,1,1,-1,-1,-1,1,1];
+        let b = Board::new();
+        assert_eq!(b.net_useless_boards(Some(bs)), 0);
     }
 }
 
