@@ -103,7 +103,7 @@ pub fn depth_limited(board: &Board, send_move: Sender<Moove>, receive_kill: Rece
         if h == -1 { //minimax returned due to the kill message
             break;
         }
-        send_move.send(mv).unwrap();
+        let _ = send_move.send(mv); //if this fails, the channel has been shut down. we do not care so we ignore it
 
         // iterate depth
         depth += 1;
