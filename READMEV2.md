@@ -12,4 +12,4 @@ at "./targert/release/wombat" </br>
 This will allow you to move this executable to any desired location and run with:</br>
 "./wombat" or "./wombat.exe"
 
-In addition, the code will live here if anything is missing: [https://github.com/sparks5115/UltimateTicTacToeAI](https://github.com/sparks5115/UltimateTicTacToeAI)
+In addition, the code will live here if anything is missing: [https://github.com/sparks5115/UltimateTicTacToeAI/tree/optimized-submission](https://github.com/sparks5115/UltimateTicTacToeAI/tree/optimized-submission)
