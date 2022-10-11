@@ -1,0 +1,2 @@
+wombat
+cargo run --release

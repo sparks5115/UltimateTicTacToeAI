@@ -329,14 +329,31 @@ impl Board {
 
 #[cfg(test)]
 mod tests {
-    use crate::Board;
+    use crate::{Board, Moove};
 
     #[test]
     fn it_works() {
-        let result = 2 + 2;
-        let bs:[i8;9] = [0,0,1,1,-1,-1,-1,1,1];
-        let b = Board::new();
-        assert_eq!(b.net_useless_boards(Some(bs)), 0);
+        let board = Board{
+            state: [1,-1,0,1,0,0,1,-1,0,
+                -1,1,-1,-1,0,0,0,1,0,
+                0,-1,1,0,0,0,0,0,0,
+                -1,1,0,-1,-1,0,1,-1,0,
+                0,1,0,0,1,-1,0,1,-1,
+                -1,0,0,0,0,1,0,0,1,
+                0,0,0,1,0,-1,-1,-1,-1,
+                -1,1,0,1,0,0,1,0,-1,
+                1,0,0,1,-1,0,1,0,0
+            ],
+            last_move: Moove::null()
+        };
+        print!("{}", board.get_heuristic_value());
+        board.print();
+        print!("BBS: ");
+        for i in board.get_big_board_state(){
+            print!("{}", i);
+        }
+        println!();
+
     }
 }
 

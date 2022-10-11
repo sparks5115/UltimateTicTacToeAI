@@ -24,8 +24,6 @@ pub fn main() {
     let mut board = Board::initialize();
     //board.print();
     loop {
-
-
         println!("Waiting for our turn...");
 
         let mut temp = read_to_string(TEAM_NAME.to_owned() + ".go");
@@ -61,12 +59,14 @@ pub fn calculate_best_move(mut board: Board, send_best_move: Sender<Moove>) {
 
     let timer_handler = thread::spawn(move || {
         let start = Instant::now();
-        let time_to_wait = Duration::from_millis((TIME_LIMIT.as_millis() - 115) as u64);
+        let time_to_wait = Duration::from_millis((TIME_LIMIT.as_millis() - 1000) as u64);
         let mut best_so_far: Moove = Moove::null();
         while start.elapsed() < time_to_wait { //tries to receive new moves until it needs to submit
             match receive_move.try_recv() {
                 Ok(mv) => {
-                    best_so_far = mv.clone();
+                    if mv.big_board < 9 && mv.small_board < 9{
+                        best_so_far = mv.clone();
+                    }
                 }
                 Err(e) => {
                     match e {
@@ -84,7 +84,7 @@ pub fn calculate_best_move(mut board: Board, send_best_move: Sender<Moove>) {
         println!("Timer: submitting move {}, {} {}", TEAM_NAME, best_so_far.big_board, best_so_far.small_board);
         write_to_move_file(best_so_far);
         send_best_move.send(best_so_far).unwrap();
-        sleep(Duration::from_secs(1));
+        sleep(Duration::from_millis(101));
     });
 
     depth_limited(&board, send_move, receive_kill);
@@ -92,12 +92,12 @@ pub fn calculate_best_move(mut board: Board, send_best_move: Sender<Moove>) {
 }
 
 pub fn depth_limited(board: &Board, send_move: Sender<Moove>, receive_kill: Receiver<bool>){
-    let mut depth = 2;
+    let mut depth = 1;
     let alpha = i32::MIN;
     let beta = i32::MAX;
 
     loop {
-        println!("Switching to secret hyper-jets! (depth {})", depth);
+        println!("Beginning depth {})", depth);
 
 
         // get value at that depth
@@ -105,7 +105,11 @@ pub fn depth_limited(board: &Board, send_move: Sender<Moove>, receive_kill: Rece
         if h == -1 { //minimax returned due to the kill message
             break;
         }
+        //println!("Heuristic Selected: {}", h);
         let _ = send_move.send(mv); //if this fails, the channel has been shut down. we do not care so we ignore it
+        if h == i32::MAX{//found a win, no need for more calculation
+            break;
+        }
 
         // iterate depth
         depth += 1;
@@ -169,7 +173,6 @@ fn minimax(maximizing_player: bool, depth: i32, mut alpha: i32, mut beta: i32, n
 
             min_eva = min(min_eva, hval);
             beta = min(beta, hval);
-            //alpha = hval;
 
             if beta <= alpha {
                 break;
